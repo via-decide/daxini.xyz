@@ -4,7 +4,7 @@ TARGET
 Validate and repair only the files touched by the previous implementation.
 
 TASK
-Create branch feature/gn8t-artifact-engine. Update index.html and logic within app object. Add two high-visibility buttons to the footer/action bar: [📄 EXPORT .MD] and [📕 EXPORT PDF]. Implement app.exportToMarkdown(): Generate a structured .md file.
+Create branch docs/gn8t-master-readme. Update README.md to be the definitive guide for the GN8T Engine.
 
 RULES
 1. Audit touched files first and identify regressions.
