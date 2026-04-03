@@ -205,6 +205,12 @@
             opacity: 0.4;
         }
 
+        .card.zayvora:hover, .card.zayvora:focus {
+            border-color: #7c4dff;
+            background: rgba(124, 77, 255, 0.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(124, 77, 255, 0.15);
+        }
+
         /* Responsive Fixes */
         @media (max-width: 768px) {
             h1 { font-size: 4rem; letter-spacing: -2px; }
@@ -244,6 +250,13 @@
                 <div class="card-icon">⬢</div>
                 <div class="card-title">ViaDecide</div>
                 <div class="card-desc">The Legacy Research Lab. Where we prototype the future of human-computer interaction.</div>
+            </a>
+
+            <!-- PORTAL 4: ZAYVORA (AI INFRASTRUCTURE) -->
+            <a href="/zayvora" class="card zayvora" tabindex="0">
+                <div class="card-icon">◈</div>
+                <div class="card-title">Zayvora</div>
+                <div class="card-desc">The AI Infrastructure Layer. Local LLMs, infrastructure intelligence, sensor networks, and protocol experimentation.</div>
             </a>
         </div>
     </main>
