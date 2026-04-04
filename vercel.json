@@ -15,6 +15,16 @@
     {
       "src": "^/(.*)$",
       "dest": "/index.html"
+      "source": "/zayvora",
+      "destination": "/zayvora/index.html"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
