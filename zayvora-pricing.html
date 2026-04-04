@@ -361,9 +361,9 @@
         <span>💳</span>
         <span>Buy Selected Credits</span>
       </button>
-      <button class="btn btn-secondary" onclick="showLegal()">
-        Learn More
-      </button>
+      <a href="mailto:dharam@viadecide.com?subject=Zayvora Support - Pricing Question" class="btn btn-secondary">
+        📧 Get Support
+      </a>
     </div>
 
     <!-- Info Section -->
@@ -379,10 +379,10 @@
 
     <!-- Legal Links -->
     <div class="legal-links">
-      <a href="/docs/TERMS_AND_CONDITIONS.md" target="_blank">Terms</a>
-      <a href="/docs/PRIVACY_POLICY.md" target="_blank">Privacy</a>
-      <a href="/docs/NO_REFUND_POLICY.md" target="_blank">Refunds</a>
-      <a href="mailto:legal@daxini.xyz">Support</a>
+      <a href="/terms.html" target="_blank">Terms</a>
+      <a href="/privacy.html" target="_blank">Privacy</a>
+      <a href="/refunds.html" target="_blank">Refunds</a>
+      <a href="mailto:dharam@viadecide.com?subject=Zayvora Support">Support</a>
     </div>
   </div>
 
@@ -438,37 +438,83 @@
       }
     }
 
+    // Fallback pricing data (used when API fails)
+    const FALLBACK_PACKAGES = [
+      {
+        id: 'credits-50',
+        credits: 50,
+        amount: 5000,
+        price: '₹99',
+        description: 'Getting Started'
+      },
+      {
+        id: 'credits-120',
+        credits: 120,
+        amount: 11800,
+        price: '₹799',
+        description: 'Heavy Users',
+        bonus: '20%'
+      },
+      {
+        id: 'credits-500',
+        credits: 500,
+        amount: 39900,
+        price: '₹2,999',
+        description: 'Enterprise'
+      }
+    ];
+
     // Load credit packages
     async function loadPackages() {
-      try {
-        const response = await fetch(`${API_URL}/payments/packages`);
-        if (!response.ok) throw new Error('Failed to load packages');
+      let packages = FALLBACK_PACKAGES;
+      let usingFallback = false;
 
-        const data = await response.json();
+      try {
+        const response = await fetch(`${API_URL}/payments/packages`, { timeout: 5000 });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.packages && data.packages.length > 0) {
+            packages = data.packages;
+          }
+        }
+      } catch (error) {
+        console.warn('Pricing API failed, loading fallback packages:', error.message);
+        usingFallback = true;
+      }
+
+      renderPackages(packages, usingFallback);
+    }
+
+    // Render pricing packages
+    function renderPackages(packages, usingFallback) {
+      try {
         const container = document.getElementById('pricingCards');
         container.innerHTML = '';
 
-        data.packages.forEach((pkg, index) => {
-          const isPopular = pkg.id === 'credits-120';
+        packages.forEach((pkg) => {
+          const isPopular = pkg.id === 'credits-120' || pkg.bonus;
           const card = document.createElement('div');
           card.className = `card ${isPopular ? 'popular' : ''}`;
           card.onclick = () => selectPackage(pkg.id, card);
 
-          const bonusPercent = pkg.id === 'credits-120' ? '20%' : '0%';
+          const bonusPercent = pkg.bonus || '0%';
           const bonusText = bonusPercent !== '0%' ? `
             <div class="bonus-badge">
               💰 ${bonusPercent} Extra Credits
             </div>
           ` : '';
 
+          const priceDisplay = typeof pkg.price === 'number' ? `₹${pkg.price}` : pkg.price;
+          const description = pkg.description || (pkg.id === 'credits-50' ? 'Getting Started' : 'Heavy Users');
+
           card.innerHTML = `
             <div class="card-content">
               <div class="card-info">
                 <h3>${pkg.credits} Credits</h3>
-                <p>Perfect for ${pkg.id === 'credits-50' ? 'getting started' : 'heavy users'}</p>
+                <p>Perfect for ${description.toLowerCase()}</p>
               </div>
               <div class="card-price">
-                <div class="amount">${pkg.price}</div>
+                <div class="amount">${priceDisplay}</div>
                 <div class="period">One-time</div>
               </div>
             </div>
@@ -483,10 +529,21 @@
           container.appendChild(card);
         });
 
+        // Show fallback message if using fallback data
+        if (usingFallback) {
+          const infoEl = document.createElement('div');
+          infoEl.style.cssText = 'background: rgba(255, 193, 7, 0.2); color: white; padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ffc107;';
+          infoEl.textContent = '📋 Packages temporarily loading default plans.';
+          document.getElementById('pricingCards').parentElement.insertBefore(infoEl, document.getElementById('pricingCards'));
+        }
+
         // Select first package by default
-        selectPackage('credits-50', container.firstChild);
+        if (container.firstChild) {
+          selectPackage(packages[0].id, container.firstChild);
+        }
       } catch (error) {
-        showError('Failed to load packages: ' + error.message);
+        console.error('Error rendering packages:', error);
+        showError('Unable to load pricing packages. Please refresh and try again.');
       }
     }
 
@@ -599,9 +656,9 @@
       }, 5000);
     }
 
-    // Show legal docs
+    // Show legal docs (now links to proper pages)
     function showLegal() {
-      alert('Terms, Privacy Policy, and No-Refund Policy are available at the bottom of this page.');
+      window.location.href = '/terms.html';
     }
 
     // Credit packages
