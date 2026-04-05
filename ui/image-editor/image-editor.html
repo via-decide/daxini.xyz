@@ -1,0 +1,17 @@
+<div id="image-editor">
+  <div id="editor-tools">
+    <h3>Tools</h3>
+    <label for="imagePrompt">Prompt</label>
+    <textarea id="imagePrompt" rows="4" placeholder="Describe the scene..."></textarea>
+    <button id="runImagePipeline" type="button">Generate</button>
+
+    <h4>Layers</h4>
+    <ul id="layerToggles" class="layer-list"></ul>
+  </div>
+
+  <div id="editor-canvas">
+    <canvas id="imageCanvas" width="1024" height="1024" aria-label="Image generation canvas"></canvas>
+  </div>
+
+  <div id="generation-timeline"></div>
+</div>

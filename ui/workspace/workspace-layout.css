@@ -1,0 +1,141 @@
+:root {
+  --bg: #0b1020;
+  --panel: #141b2f;
+  --panel-soft: #10172a;
+  --border: #2a365b;
+  --text: #dfe7ff;
+  --muted: #8ea0cf;
+  --accent: #5ca6ff;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+#mobile-blocker {
+  display: none;
+  padding: 2rem;
+  text-align: center;
+}
+
+#workspace {
+  display: grid;
+  grid-template-columns: 260px 8px 1fr 8px 340px;
+  grid-template-rows: 1fr 8px 180px;
+  grid-template-areas:
+    'explorer . preview . chat'
+    'terminal terminal terminal terminal terminal'
+    'terminal terminal terminal terminal terminal';
+  height: 100vh;
+  min-height: 0;
+}
+
+#explorer { grid-area: explorer; }
+#preview { grid-area: preview; }
+#chat { grid-area: chat; }
+#terminal { grid-area: terminal; }
+
+.panel {
+  min-height: 0;
+  background: linear-gradient(180deg, var(--panel) 0%, var(--panel-soft) 100%);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header {
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.panel-body {
+  padding: 0.9rem;
+  overflow: auto;
+  min-height: 0;
+}
+
+.resizer-vertical,
+.resizer-horizontal {
+  background: #1a2542;
+}
+
+.resizer-vertical:hover,
+.resizer-horizontal:hover {
+  background: #2f4e7c;
+}
+
+.chat-panel {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 0.7rem;
+}
+
+.chat-log {
+  margin: 0;
+  padding: 0.6rem;
+  border: 1px solid #24345d;
+  border-radius: 10px;
+  overflow: auto;
+}
+
+.chat-line { margin: 0.35rem 0; }
+.chat-line--user { color: #d2e6ff; }
+.chat-line--agent { color: #9ac4ff; }
+
+.chat-controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.55rem;
+}
+
+.chat-controls input,
+.chat-controls button,
+.project-create-row input,
+.project-create-row button {
+  background: #0f1630;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+}
+
+.tree { list-style: none; margin: 0; padding: 0; }
+
+.project-open {
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  padding: 0.35rem 0.45rem;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+@media (max-width:900px) {
+  body > :not(#mobile-blocker) {
+    display: none;
+  }
+
+  #mobile-blocker {
+    display: block;
+  }
+}
+
+.image-editor-mount {
+  height: 100%;
+  min-height: 0;
+}
+
+#preview .panel-body {
+  padding: 0.75rem;
+}

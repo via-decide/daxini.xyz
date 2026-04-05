@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zayvora Onboarding</title>
+  <link rel="stylesheet" href="./auth.css" />
+</head>
+<body>
+  <main class="auth-shell">
+    <section class="step active" data-step="1">
+      <h1>Step 1 — Welcome to Zayvora</h1>
+      <p>Your workspace is almost ready. Let’s personalize your setup.</p>
+      <div class="actions">
+        <button type="button" data-next>Continue</button>
+      </div>
+    </section>
+
+    <section class="step" data-step="2">
+      <h1>Step 2 — Select use case</h1>
+      <p>Pick the path that best matches your goals.</p>
+      <div class="pill-group" id="use-case-options">
+        <button type="button" class="pill" data-use-case="AI Engineering">AI Engineering</button>
+        <button type="button" class="pill" data-use-case="Code Generation">Code Generation</button>
+        <button type="button" class="pill" data-use-case="Startup Building">Startup Building</button>
+        <button type="button" class="pill" data-use-case="Learning AI">Learning AI</button>
+      </div>
+      <div class="actions">
+        <button type="button" class="secondary-btn" data-prev>Back</button>
+        <button type="button" data-next>Continue</button>
+      </div>
+    </section>
+
+    <section class="step" data-step="3">
+      <h1>Step 3 — Create workspace</h1>
+      <p>Choose a workspace name. Example: <em>student-workspace</em>.</p>
+      <label for="workspace-name">Workspace name</label>
+      <input id="workspace-name" placeholder="student-workspace" required />
+      <div class="actions">
+        <button type="button" class="secondary-btn" data-prev>Back</button>
+        <button type="button" data-next>Create workspace</button>
+      </div>
+    </section>
+
+    <section class="step" data-step="4">
+      <h1>Step 4 — Launch workspace</h1>
+      <p>Your account setup is complete. Ready to launch?</p>
+      <div class="actions">
+        <button type="button" data-launch>Open workspace</button>
+      </div>
+    </section>
+
+    <div class="message" id="auth-message"></div>
+  </main>
+  <script src="./auth.js"></script>
+</body>
+</html>

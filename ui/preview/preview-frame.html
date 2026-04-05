@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zayvora Live Preview</title>
+    <link rel="stylesheet" href="./preview.css" />
+  </head>
+  <body>
+    <main class="preview-shell">
+      <header class="preview-toolbar">
+        <label for="project-port" class="field-label">Project Port</label>
+        <input id="project-port" class="port-input" type="number" min="1" max="65535" value="5173" />
+        <button id="connect-btn" type="button">Connect</button>
+        <button id="refresh-btn" type="button">Refresh</button>
+        <span id="status" class="status" aria-live="polite">Idle</span>
+      </header>
+
+      <section class="preview-canvas">
+        <iframe
+          id="preview-iframe"
+          title="Project Preview"
+          loading="eager"
+          sandbox="allow-forms allow-modals allow-popups allow-scripts allow-same-origin"
+        ></iframe>
+      </section>
+    </main>
+
+    <script src="./preview-engine.js"></script>
+  </body>
+</html>

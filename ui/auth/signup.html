@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zayvora Signup</title>
+  <link rel="stylesheet" href="./auth.css" />
+</head>
+<body>
+  <main class="auth-shell">
+    <h1>Create your Zayvora account</h1>
+    <p>Sign up to start onboarding and launch your first workspace.</p>
+
+    <form id="signup-form">
+      <label for="name">Name</label>
+      <input id="name" name="name" placeholder="Student" required />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" placeholder="user@email.com" required />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="password123" required minlength="8" />
+
+      <button type="submit">Create account</button>
+    </form>
+
+    <div class="message" id="auth-message"></div>
+    <p><small>Already have an account? <a href="./login.html">Login</a>.</small></p>
+  </main>
+  <script src="./auth.js"></script>
+</body>
+</html>

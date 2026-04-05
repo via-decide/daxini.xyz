@@ -130,6 +130,7 @@
             margin-bottom: 2rem;
             background: linear-gradient(to bottom, #fff, #666);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -423,7 +424,7 @@
         <ul class="nav-links">
             <li><a href="https://logichub.app">LogicHub</a></li>
             <li><a href="https://viadecide.com">Via</a></li>
-            <li><a href="/zayvora" class="nav-zayvora">Zayvora</a></li>
+            <li><a href="/ui/workspace/index.html" class="nav-zayvora">Zayvora</a></li>
             <li><a href="/studyos">StudyOS</a></li>
         </ul>
     </nav>
@@ -531,8 +532,8 @@
             }
 
             // Step 3: User is authenticated and onboarded
-            console.log('[Zayvora] User authenticated and onboarded, launching chat');
-            window.location.href = '/zayvora-chat';
+            console.log('[Zayvora] User authenticated and onboarded, launching Workspace UI');
+            window.location.href = '/ui/workspace/index.html';
         }
 
         // Attach click handler to button

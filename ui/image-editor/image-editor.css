@@ -1,0 +1,70 @@
+#image-editor {
+  display: grid;
+  grid-template-columns: 240px 1fr 260px;
+  gap: 12px;
+  height: 100%;
+}
+
+#editor-tools,
+#generation-timeline {
+  border: 1px solid #2a365b;
+  border-radius: 10px;
+  padding: 12px;
+  background: rgba(15, 22, 48, 0.8);
+  overflow: auto;
+}
+
+#editor-tools textarea,
+#editor-tools button {
+  width: 100%;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+#editor-tools textarea,
+#editor-tools button,
+.layer-list button {
+  background: #0f1630;
+  color: #dfe7ff;
+  border: 1px solid #2a365b;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+#editor-canvas {
+  border: 1px solid #2a365b;
+  border-radius: 10px;
+  background: #090f22;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+#imageCanvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.timeline-stage {
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid #2a365b;
+  cursor: pointer;
+}
+
+.timeline-stage.active {
+  border-color: #5ca6ff;
+  background: rgba(92, 166, 255, 0.15);
+}
+
+.layer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.layer-list li {
+  margin-bottom: 8px;
+}
