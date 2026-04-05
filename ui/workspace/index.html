@@ -11,94 +11,25 @@
   <link rel="stylesheet" href="/ui/image-editor/image-editor.css" />
 </head>
 <body>
-  <div id="mobile-blocker">Zayvora workspace currently supports desktop. Mobile UI coming soon.</div>
-
-  <div id="workspace">
-    <!-- Left panel: Projects / Files / History tabs -->
-    <section id="explorer" class="panel" aria-label="Project explorer">
-      <header class="panel-header">Explorer</header>
-      <div id="left-panel-mount" class="panel-body" style="padding:0; overflow:hidden; display:flex; flex-direction:column;"></div>
-    </section>
-
-    <section id="preview" class="panel" aria-label="Editor and live preview">
-      <header class="panel-header">Image editor + generation preview</header>
-      <div class="panel-body editor-shell">
-        <div id="imageEditorMount" class="image-editor-mount" aria-label="Image editor workspace"></div>
-        <div class="editor-toolbar">
-          <p id="editorStatus" class="editor-status" aria-live="polite">Loading editor…</p>
-          <button id="saveFileBtn" class="editor-save" type="button">Save file</button>
-        </div>
-        <div id="codeEditor" class="code-editor" aria-label="Code editor"></div>
-        <iframe id="preview-frame" class="editor-preview" title="Live preview"></iframe>
-      </div>
-    </section>
-
-    <section id="chat" class="panel" aria-label="Agent chat">
-      <header class="panel-header">Zayvora agent</header>
-      <div class="panel-body chat-panel">
-        <div id="chatLog" class="chat-log" aria-live="polite"></div>
-        <div class="chat-controls">
-          <input id="chatPrompt" type="text" placeholder="Ask the agent (Ctrl+Enter)" aria-label="Chat prompt" />
-          <button id="chatSend" type="button">Send</button>
-        </div>
-      </div>
-    </section>
-
-    <section id="terminal" class="panel" aria-label="Terminal">
-      <header class="panel-header">Terminal</header>
-      <div class="panel-body terminal-body">
-        <div class="terminal-shell">
-          <div id="terminalLog" class="terminal-log" aria-live="polite"></div>
-          <div class="terminal-controls">
-            <input id="terminalInput" class="terminal-input" type="text" placeholder="Run shell command" aria-label="Run shell command" />
-            <button id="terminalRun" class="terminal-run" type="button">Run</button>
-          </div>
-        </div>
-      </div>
-    </section>
+  <div id="mission-control-workspace" style="display: grid; grid-template-columns: 300px 8px 1fr 8px 300px; height: 100vh;">
+    <!-- LEFT: CHAT -->
+    <div id="chat-panel-mount" class="panel-section"></div>
+    <div id="resizer-left" class="panel-resizer"></div>
+    
+    <!-- CENTER: PREVIEW -->
+    <div id="preview-panel-mount" class="panel-section"></div>
+    <div id="resizer-right" class="panel-resizer"></div>
+    
+    <!-- RIGHT: WORKSPACE (PRs / FILES) -->
+    <div id="workspace-panel-mount" class="panel-section"></div>
   </div>
 
-
-  <script>
-    (function authGuard() {
-      const token = localStorage.getItem('zayvora_token');
-      const authBase = localStorage.getItem('zayvora_auth_base') || 'http://localhost:4000';
-
-      if (!token) {
-        // window.location.href = '/ui/auth/login.html';
-        return;
-      }
-
-      fetch(`${authBase}/auth/verify`, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error('Invalid token');
-        })
-        .catch(() => {
-          // localStorage.removeItem('zayvora_token');
-          // window.location.href = '/ui/auth/login.html';
-        });
-    })();
+  <script type="module">
+    import { missionControl } from '/ui/layout/mission-control.js';
+    import { ZayvoraState } from '/ui/state/zayvora-state.js';
+    
+    // Auto-detect the repo from the URL or state
+    ZayvoraState.setActiveRepo('via-decide/zayvora');
   </script>
-
-  <!-- Explorer layer: store → components → orchestrator -->
-  <script src="/ui/explorer/workspace-store.js"></script>
-  <script src="/ui/explorer/file-tree-enhanced.js"></script>
-  <script src="/ui/explorer/project-manager.js"></script>
-  <script src="/ui/explorer/history-viewer.js"></script>
-  <script src="/ui/explorer/left-panel.js"></script>
-
-  <!-- Editor / preview / chat / terminal -->
-  <script src="/ui/preview/preview-engine.js"></script>
-  <script src="/ui/editor/code-editor.js"></script>
-  <script src="/ui/image-editor/timeline.js"></script>
-  <script src="/ui/image-editor/image-editor.js"></script>
-  <script src="/ui/chat/chat-agent.js"></script>
-  <script src="/ui/terminal/terminal.js"></script>
-
-  <!-- Layout orchestrator (wires everything together) -->
-  <script src="/ui/workspace/workspace-layout.js"></script>
 </body>
 </html>
