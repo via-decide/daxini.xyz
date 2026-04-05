@@ -514,25 +514,7 @@
                 e.stopPropagation();
             }
 
-            const authToken = localStorage.getItem('zayvora_token');
-            const onboardingComplete = localStorage.getItem('zayvora_onboarding');
-
-            // Step 1: Check authentication
-            if (!authToken) {
-                console.log('[Zayvora] No auth token found, redirecting to login');
-                window.location.href = '/ui/auth/login.html';
-                return;
-            }
-
-            // Step 2: Check onboarding completion
-            if (!onboardingComplete) {
-                console.log('[Zayvora] Auth token found but onboarding incomplete, redirecting to onboarding');
-                window.location.href = '/zayvora-onboarding';
-                return;
-            }
-
-            // Step 3: User is authenticated and onboarded
-            console.log('[Zayvora] User authenticated and onboarded, launching Workspace UI');
+            console.log('[Zayvora] Launching Workspace (Demo Mode)...');
             window.location.href = '/ui/workspace/index.html';
         }
 
