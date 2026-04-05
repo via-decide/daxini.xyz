@@ -1,0 +1,48 @@
+.terminal-shell {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  height: 100%;
+  gap: 0.7rem;
+}
+
+.terminal-log {
+  margin: 0;
+  padding: 0.6rem;
+  background: #0a1022;
+  border: 1px solid #24345d;
+  border-radius: 10px;
+  overflow: auto;
+  min-height: 0;
+  white-space: pre-wrap;
+}
+
+.terminal-line {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.terminal-line--system { color: #9ac4ff; }
+.terminal-line--server { color: #87b9ff; }
+.terminal-line--command { color: #d2e6ff; }
+.terminal-line--error { color: #ff9ba0; }
+.terminal-line--muted { color: #8ea0cf; }
+
+.terminal-controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.55rem;
+}
+
+.terminal-input,
+.terminal-run {
+  background: #0f1630;
+  color: #dfe7ff;
+  border: 1px solid #2a365b;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+}
+
+.terminal-run {
+  cursor: pointer;
+  min-width: 92px;
+}
