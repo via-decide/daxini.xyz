@@ -1,0 +1,9 @@
+{
+  "name": "daxini-xyz-core",
+  "version": "2.0.4",
+  "main": "api/index.js",
+  "type": "module",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}
