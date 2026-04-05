@@ -62,7 +62,7 @@
   <script>
     (function authGuard() {
       const token = localStorage.getItem('zayvora_token');
-      const authBase = localStorage.getItem('zayvora_auth_base') || 'http://MAC_MINI_IP:4000';
+      const authBase = localStorage.getItem('zayvora_auth_base') || 'http://localhost:4000';
 
       if (!token) {
         window.location.href = '/ui/auth/login.html';
