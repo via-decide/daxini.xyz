@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Zayvora Workspace Desktop</title>
-  <link rel="stylesheet" href="./workspace-layout.css" />
-  <link rel="stylesheet" href="../explorer/left-panel.css" />
-  <link rel="stylesheet" href="../editor/editor.css" />
-  <link rel="stylesheet" href="../terminal/terminal.css" />
-  <link rel="stylesheet" href="../image-editor/image-editor.css" />
+  <link rel="stylesheet" href="/ui/workspace/workspace-layout.css" />
+  <link rel="stylesheet" href="/ui/explorer/left-panel.css" />
+  <link rel="stylesheet" href="/ui/editor/editor.css" />
+  <link rel="stylesheet" href="/ui/terminal/terminal.css" />
+  <link rel="stylesheet" href="/ui/image-editor/image-editor.css" />
 </head>
 <body>
   <div id="mobile-blocker">Zayvora workspace currently supports desktop. Mobile UI coming soon.</div>
@@ -84,21 +84,21 @@
   </script>
 
   <!-- Explorer layer: store → components → orchestrator -->
-  <script src="../explorer/workspace-store.js"></script>
-  <script src="../explorer/file-tree-enhanced.js"></script>
-  <script src="../explorer/project-manager.js"></script>
-  <script src="../explorer/history-viewer.js"></script>
-  <script src="../explorer/left-panel.js"></script>
+  <script src="/ui/explorer/workspace-store.js"></script>
+  <script src="/ui/explorer/file-tree-enhanced.js"></script>
+  <script src="/ui/explorer/project-manager.js"></script>
+  <script src="/ui/explorer/history-viewer.js"></script>
+  <script src="/ui/explorer/left-panel.js"></script>
 
   <!-- Editor / preview / chat / terminal -->
-  <script src="../preview/preview-engine.js"></script>
-  <script src="../editor/code-editor.js"></script>
-  <script src="../image-editor/timeline.js"></script>
-  <script src="../image-editor/image-editor.js"></script>
-  <script src="../chat/chat-agent.js"></script>
-  <script src="../terminal/terminal.js"></script>
+  <script src="/ui/preview/preview-engine.js"></script>
+  <script src="/ui/editor/code-editor.js"></script>
+  <script src="/ui/image-editor/timeline.js"></script>
+  <script src="/ui/image-editor/image-editor.js"></script>
+  <script src="/ui/chat/chat-agent.js"></script>
+  <script src="/ui/terminal/terminal.js"></script>
 
   <!-- Layout orchestrator (wires everything together) -->
-  <script src="./workspace-layout.js"></script>
+  <script src="/ui/workspace/workspace-layout.js"></script>
 </body>
 </html>
