@@ -11,6 +11,34 @@
       "destination": "/api/index.js"
     },
     {
+      "source": "/early-access",
+      "destination": "/zayvora-login/index.html"
+    },
+    {
+      "source": "/zayvora-login",
+      "destination": "/zayvora-login/index.html"
+    },
+    {
+      "source": "/zayvora-onboarding",
+      "destination": "/zayvora-onboarding/index.html"
+    },
+    {
+      "source": "/zayvora-chat",
+      "destination": "/zayvora-chat/index.html"
+    },
+    {
+      "source": "/zayvora",
+      "destination": "/zayvora/index.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/zayvora-login/index.html"
+    },
+    {
+      "source": "/workspace",
+      "destination": "/workspace/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
