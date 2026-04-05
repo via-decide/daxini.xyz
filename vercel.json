@@ -1,12 +1,10 @@
 {
   "version": 2,
   "cleanUrls": true,
-  "trailingSlash": true,
-  "redirects": [
-    { "source": "/early-access", "destination": "/zayvora-onboarding/", "permanent": true }
-  ],
+  "trailingSlash": false,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/((?!api/|.*\\.).*)", "destination": "/index.html" }
+    { "source": "/early-access", "destination": "/zayvora-onboarding/index.html" },
+    { "source": "/((?!api/|.*\.).*)", "destination": "/index.html" }
   ]
 }
