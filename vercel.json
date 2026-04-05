@@ -112,7 +112,11 @@
       "destination": "/studyos.html"
     },
     {
-      "source": "/((?!.*\\.).*)",
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/((?!.*\\.|api/).*)",
       "destination": "/index.html"
     }
   ]
