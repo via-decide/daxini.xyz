@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zayvora Engine — Workspace</title>
+    
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@600;800&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="./styles/zayvora.css">
+    <style>
+        /* Embedded core tokens to ensure parity if shared css is missing */
+        :root {
+            --void: #030508;
+            --surface: rgba(10, 12, 18, 0.8);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-bright: rgba(255, 255, 255, 0.15);
+            --accent-cyan: #00e5ff;
+            --accent-saffron: #ff671f;
+            --text-primary: #ffffff;
+            --text-muted: #888899;
+            --font-display: 'Syne', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        body {
+            background: var(--void);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            overflow-x: hidden;
+        }
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 52px;
+            background: rgba(3, 5, 8, 0.85);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .nav-logo {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .stack-status {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #444;
+        }
+        .status-dot.online { background: #00ff8c; box-shadow: 0 0 10px rgba(0, 255, 140, 0.5); }
+        .status-dot.offline { background: #ff4d4d; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="nav-logo">DAXINI // ZAYVORA</a>
+        
+        <div class="stack-status">
+            <div class="status-item" id="status-zayvora">
+                <span class="status-dot"></span>
+                <span>Zayvora: <span class="val">Checking...</span></span>
+            </div>
+            <div class="status-item" id="status-nex">
+                <span class="status-dot online"></span>
+                <span>Nex: <span class="val">12k+ Vectors</span></span>
+            </div>
+            <div class="status-item" id="status-model">
+                <span class="status-dot online"></span>
+                <span>Model: <span class="val">llama3</span></span>
+            </div>
+        </div>
+        
+        <div style="width: 100px;"></div> <!-- Spacer for balance -->
+    </nav>
+
+    <main class="zayvora-layout" style="margin-top: 52px;">
+        <!-- sidebar: 6-Stage Indicator -->
+        <aside class="stage-sidebar">
+            <h3>Reasoning Architecture</h3>
+            
+            <div class="stage-item" id="stage-decompose">
+                <span class="stage-num">01</span>
+                <span class="stage-label">Decompose</span>
+            </div>
+            <div class="stage-item" id="stage-retrieve">
+                <span class="stage-num">02</span>
+                <span class="stage-label">Retrieve</span>
+            </div>
+            <div class="stage-item" id="stage-synthesize">
+                <span class="stage-num">03</span>
+                <span class="stage-label">Synthesize</span>
+            </div>
+            <div class="stage-item" id="stage-calculate">
+                <span class="stage-num">04</span>
+                <span class="stage-label">Calculate</span>
+            </div>
+            <div class="stage-item" id="stage-verify">
+                <span class="stage-num">05</span>
+                <span class="stage-label">Verify</span>
+            </div>
+            <div class="stage-item" id="stage-revise">
+                <span class="stage-num">06</span>
+                <span class="stage-label">Revise</span>
+            </div>
+
+            <div style="flex: 1;"></div>
+            
+            <div class="connection-wizard" id="connection-warning" style="display: none;">
+                <p style="font-size: 0.7rem; color: var(--stage-fail);">Engine Unreachable</p>
+                <button onclick="checkConnection()" style="background: none; border: 1px solid var(--border-bright); color: #fff; font-size: 0.6rem; padding: 4px 8px; margin-top: 5px; cursor: pointer;">Retry Port 8902</button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <section class="chat-thread">
+            <div class="message-area" id="message-container">
+                <!-- Welcome Message -->
+                <div class="message zayvora">
+                    <p style="margin-bottom: 1rem;">Welcome to the **Sovereign Engineering Reasoning Engine**.</p>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">Zayvora is ready for hardware calculations, thermal audits, and structural analysis. No data leaves this stack.</p>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-box">
+                    <input type="text" id="user-input" placeholder="Ask Zayvora an engineering problem..." autocomplete="off">
+                    <button class="send-btn" id="send-btn">⤖</button>
+                </div>
+
+                <div class="tool-surface">
+                    <span class="tool-icon" title="Nex Engineering Corpus" id="tool-nex">🔍</span>
+                    <span class="tool-icon" title="SymPy Calculator" id="tool-calc">🧮</span>
+                    <span class="tool-icon" title="Pint Unit Analyzer" id="tool-units">📏</span>
+                    <span class="tool-icon" title="Physics Guardian" id="tool-guardian">🛡️</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="./scripts/zayvora-ui.js"></script>
+</body>
+</html>
