@@ -3,7 +3,7 @@
   MISSION: AUTONOMOUS BUG ASSASSIN - PHASE 2 + STUDENT VERIFICATION
 */
 
-import studentVerifyHandler from './student-verify.js';
+import studentVerifyHandler from './_student-verify.js';
 
 export default async function handler(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
