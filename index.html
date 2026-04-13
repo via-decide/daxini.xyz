@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#0b0c0f"/>
+  <title>DAXINI — Sovereign AI Systems</title>
+  <meta name="description" content="Daxini Systems Interface. Local-first reasoning engines, knowledge infrastructure, and sovereign AI architecture."/>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="./assets/css/base.css"/>
+  <link rel="stylesheet" href="./assets/css/layout.css"/>
+  <link rel="stylesheet" href="./assets/css/components.css"/>
+  <link rel="stylesheet" href="./assets/css/modules.css"/>
+</head>
+<body>
+
+<!-- Noise texture -->
+<div class="noise" aria-hidden="true"></div>
+
+<!-- ═══════ NAV ═══════════════════════════════════════════ -->
+<nav class="site-nav" role="navigation" aria-label="Main navigation">
+  <a href="#" class="nav-brand">
+    <div class="nav-pulse" aria-hidden="true"></div>
+    DAXINI
+  </a>
+  <div class="nav-links">
+    <a href="#stack">Stack</a>
+    <a href="#reasoning">Reasoning</a>
+    <a href="#graph">Knowledge</a>
+    <a href="#github">GitHub</a>
+  </div>
+</nav>
+
+<!-- ═══════ HERO ══════════════════════════════════════════ -->
+<section class="hero" id="hero">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="container">
+    <div class="hero-label">
+      <span class="status-dot" aria-hidden="true"></span>
+      SYSTEMS ONLINE
+    </div>
+    <h1>DAXINI<br><span class="thin">Systems</span></h1>
+    <p class="hero-tagline">Sovereign AI Infrastructure</p>
+    <p class="hero-desc">Local-first reasoning engines and knowledge infrastructure. Building the decision layer for India's digital future.</p>
+    <div class="hero-buttons">
+      <a href="#stack" class="btn btn-primary">Explore Stack</a>
+      <a href="#graph" class="btn">Open Research</a>
+      <a href="https://github.com/via-decide" class="btn" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </div>
+    <div class="hero-meta">
+      <div class="hero-stat">
+        <div class="hero-stat-num">4</div>
+        <div class="hero-stat-label">Architecture Layers</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">6</div>
+        <div class="hero-stat-label">Reasoning Stages</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">14</div>
+        <div class="hero-stat-label">Research Nodes</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ INTERACTIVE STACK ═════════════════════════════ -->
+<section class="section" id="stack">
+  <div class="container">
+    <div class="section-eyebrow">Architecture</div>
+    <h2 class="section-title">The Daxini Stack</h2>
+    <p class="section-subtitle">Four layers of sovereign AI infrastructure. Click any layer to explore its role, capabilities, and connections.</p>
+    <div class="divider"></div>
+    <div class="stack-container">
+      <div class="stack-visual" id="stack-visual" role="tablist" aria-label="Stack layers"></div>
+      <div class="stack-detail" id="stack-detail" role="tabpanel" aria-label="Layer details"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ REASONING LOOP ════════════════════════════════ -->
+<section class="section" id="reasoning">
+  <div class="container">
+    <div class="section-eyebrow">Zayvora Engine</div>
+    <h2 class="section-title">Reasoning Loop</h2>
+    <p class="section-subtitle">Every query passes through six verification stages. Watch the live reasoning cycle that powers Zayvora's output quality.</p>
+    <div class="reasoning-ring" id="reasoning-ring" aria-label="Reasoning stages"></div>
+    <div class="reasoning-status">
+      <div class="reasoning-cycle mono" id="reasoning-cycle">Initializing…</div>
+      <div class="reasoning-current" id="reasoning-current">—</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ KNOWLEDGE GRAPH ═══════════════════════════════ -->
+<section class="section" id="graph">
+  <div class="container">
+    <div class="section-eyebrow">Research</div>
+    <h2 class="section-title">Knowledge Graph</h2>
+    <p class="section-subtitle">The conceptual map connecting research articles, system components, and product surfaces. Hover nodes to explore.</p>
+    <div class="graph-wrapper">
+      <canvas id="graph-canvas" aria-label="Knowledge graph visualization"></canvas>
+      <div class="graph-tooltip" id="graph-tooltip"></div>
+      <div class="graph-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#5b8cff"></div>Core</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>Research</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div>Applied</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Product</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ GITHUB ACTIVITY ══════════════════════════════ -->
+<section class="section" id="github">
+  <div class="container">
+    <div class="section-eyebrow">Ecosystem</div>
+    <h2 class="section-title">GitHub Activity</h2>
+    <p class="section-subtitle">Live repositories from the via-decide organization. The open-source foundation of the Daxini stack.</p>
+    <div class="gh-grid" id="gh-grid"></div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ════════════════════════════════════════ -->
+<footer class="site-footer">
+  <p>DAXINI SYSTEMS · <span id="footer-year">2026</span> · <a href="https://github.com/via-decide" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+</footer>
+
+<!-- ═══════ SCRIPTS ═══════════════════════════════════════ -->
+<script src="./assets/js/stack.js"></script>
+<script src="./assets/js/reasoning.js"></script>
+<script src="./assets/js/graph.js"></script>
+<script src="./assets/js/github.js"></script>
+<script src="./assets/js/app.js"></script>
+
+</body>
+</html>

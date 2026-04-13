@@ -1,0 +1,129 @@
+/* ══════════════════════════════════════════════════════════
+   LAYOUT.CSS — Daxini Systems Interface
+   Page structure, grid, responsive breakpoints
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Container ──────────────────────────────────────────── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* ── Section ────────────────────────────────────────────── */
+.section {
+  padding: 5rem 0;
+  position: relative;
+}
+
+.section + .section {
+  border-top: 1px solid var(--bd);
+}
+
+/* ── Section Header ─────────────────────────────────────── */
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: .75rem;
+}
+
+.section-eyebrow::before {
+  content: '';
+  width: 18px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.section-title {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 500;
+  letter-spacing: -.03em;
+  margin-bottom: .6rem;
+}
+
+.section-subtitle {
+  font-size: .88rem;
+  color: var(--tx2);
+  max-width: 520px;
+  line-height: 1.7;
+}
+
+/* ── Grid Utilities ─────────────────────────────────────── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+
+/* ── Nav ────────────────────────────────────────────────── */
+.site-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .8rem 2rem;
+  background: rgba(11,12,15,.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--bd);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.nav-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: nav-pulse 2.5s infinite;
+}
+
+@keyframes nav-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(91,140,255,.45); }
+  50% { box-shadow: 0 0 0 8px rgba(91,140,255,0); }
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.75rem;
+}
+
+.nav-links a {
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--tx3);
+  transition: color .2s;
+  padding: .25rem 0;
+}
+
+.nav-links a:hover,
+.nav-links a:focus-visible {
+  color: var(--accent);
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 840px) {
+  .container { padding: 0 1.15rem; }
+  .section   { padding: 3rem 0; }
+  .grid-2    { grid-template-columns: 1fr; }
+  .grid-3    { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+  .site-nav  { padding: .75rem 1rem; }
+}

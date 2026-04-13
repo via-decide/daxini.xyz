@@ -1,0 +1,38 @@
+{
+  "nodes": [
+    { "id": 1, "label": "Zayvora Engine",     "group": "core",     "desc": "Sovereign reasoning engine with 6-stage verification loop." },
+    { "id": 2, "label": "Daxini Stack",       "group": "core",     "desc": "Full-stack AI operating system architecture." },
+    { "id": 3, "label": "Local-First AI",     "group": "research", "desc": "Computation without cloud dependency. Privacy-native." },
+    { "id": 4, "label": "Knowledge Systems",  "group": "research", "desc": "Graph-based knowledge indexing and semantic retrieval." },
+    { "id": 5, "label": "LogicHub",           "group": "core",     "desc": "Reasoning orchestrator. Routes queries through decision paths." },
+    { "id": 6, "label": "Nex",                "group": "core",     "desc": "Contextual memory and session awareness layer." },
+    { "id": 7, "label": "Decision Science",   "group": "research", "desc": "Structured decision-making frameworks and weighted analysis." },
+    { "id": 8, "label": "ONDC Commerce",      "group": "applied",  "desc": "Open Network for Digital Commerce integration layer." },
+    { "id": 9, "label": "IndiaAI Mission",    "group": "applied",  "desc": "Sovereign AI positioning for India's digital infrastructure." },
+    { "id": 10, "label": "ViaDecide",         "group": "product",  "desc": "Decision engine platform with 68+ interactive tools." },
+    { "id": 11, "label": "SkillHex",          "group": "product",  "desc": "Gamified skill assessment and progression system." },
+    { "id": 12, "label": "StudyOS",           "group": "product",  "desc": "Research-native learning operating system." },
+    { "id": 13, "label": "Multi-Source Research", "group": "research", "desc": "4-wiki synthesis engine for structured briefs." },
+    { "id": 14, "label": "Semantic Search",   "group": "core",     "desc": "TF-IDF + concept-based search across knowledge network." }
+  ],
+  "edges": [
+    { "from": 1, "to": 2 },
+    { "from": 1, "to": 5 },
+    { "from": 1, "to": 6 },
+    { "from": 1, "to": 14 },
+    { "from": 2, "to": 3 },
+    { "from": 2, "to": 4 },
+    { "from": 2, "to": 10 },
+    { "from": 3, "to": 9 },
+    { "from": 4, "to": 13 },
+    { "from": 4, "to": 14 },
+    { "from": 5, "to": 7 },
+    { "from": 5, "to": 6 },
+    { "from": 7, "to": 10 },
+    { "from": 7, "to": 8 },
+    { "from": 10, "to": 11 },
+    { "from": 10, "to": 12 },
+    { "from": 13, "to": 12 },
+    { "from": 8, "to": 9 }
+  ]
+}

@@ -1,0 +1,90 @@
+/* ══════════════════════════════════════════════════════════
+   BASE.CSS — Daxini Systems Interface
+   Reset, Tokens, Typography, Global Primitives
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Reset ──────────────────────────────────────────────── */
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; -webkit-text-size-adjust:100%; }
+body { line-height:1.65; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; overflow-x:hidden; }
+img,svg,video,canvas { display:block; max-width:100%; }
+button,input,select,textarea { font:inherit; }
+a { color:inherit; text-decoration:none; }
+ul,ol { list-style:none; }
+
+/* ── Design Tokens ──────────────────────────────────────── */
+:root {
+  /* background */
+  --bg:       #0b0c0f;
+  --bg1:      #0e1014;
+  --bg2:      #12141a;
+  --bg3:      #181b24;
+  --surface:  #12141a;
+
+  /* border / line */
+  --bd:       #1e222e;
+  --bd2:      #2a2f3a;
+  --bd3:      #353a4a;
+
+  /* text */
+  --tx:       #e8e6e1;
+  --tx2:      #8b90a6;
+  --tx3:      #4e5368;
+
+  /* accent */
+  --accent:   #5b8cff;
+  --accent2:  #7babff;
+  --accent-g: rgba(91,140,255,0.10);
+
+  /* semantic */
+  --green:    #34d399;
+  --amber:    #fbbf24;
+  --red:      #f87171;
+  --violet:   #a78bfa;
+
+  /* radii */
+  --r:        12px;
+  --r-lg:     18px;
+  --r-sm:     6px;
+
+  /* motion */
+  --ease:     cubic-bezier(.4,0,.2,1);
+  --spring:   cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ── Typography ─────────────────────────────────────────── */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  color: var(--tx);
+  background: var(--bg);
+}
+
+h1,h2,h3,h4,h5,h6 {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+code, pre, .mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ── Focus ──────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Selection ──────────────────────────────────────────── */
+::selection {
+  background: rgba(91,140,255,0.25);
+  color: #fff;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--bd2); border-radius:99px; }
+::-webkit-scrollbar-thumb:hover { background:var(--bd3); }

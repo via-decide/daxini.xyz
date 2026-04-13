@@ -1,0 +1,132 @@
+/* ══════════════════════════════════════════════════════════
+   COMPONENTS.CSS — Daxini Systems Interface
+   Buttons, cards, badges, inputs shared across modules
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Buttons ────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: .6rem 1.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--bd2);
+  background: var(--surface);
+  color: var(--tx2);
+  cursor: pointer;
+  transition: all .2s var(--ease);
+  white-space: nowrap;
+}
+
+.btn:hover {
+  color: var(--tx);
+  border-color: var(--bd3);
+  background: var(--bg3);
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-primary:hover {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  box-shadow: 0 8px 24px rgba(91,140,255,.25);
+}
+
+/* ── Card ───────────────────────────────────────────────── */
+.card {
+  border-radius: var(--r-lg);
+  border: 1px solid var(--bd);
+  background: var(--bg2);
+  padding: 1.5rem;
+  transition: border-color .25s, box-shadow .25s, transform .3s var(--spring);
+}
+
+.card:hover {
+  border-color: var(--bd3);
+  box-shadow: 0 12px 40px rgba(0,0,0,.35);
+  transform: translateY(-3px);
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: .35rem;
+}
+
+.card-desc {
+  font-size: .8rem;
+  color: var(--tx2);
+  line-height: 1.6;
+}
+
+/* ── Badge ──────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: .2rem .65rem;
+  border-radius: 99px;
+  background: var(--accent-g);
+  color: var(--accent);
+  border: 1px solid rgba(91,140,255,.15);
+}
+
+.badge-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ── Status Indicator ───────────────────────────────────── */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .7rem;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: status-blink 2s infinite;
+}
+
+@keyframes status-blink {
+  0%,100% { opacity: 1; }
+  50% { opacity: .3; }
+}
+
+/* ── Divider ────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--bd);
+  margin: 2rem 0;
+}
+
+/* ── Noise Overlay ──────────────────────────────────────── */
+.noise {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
