@@ -225,6 +225,8 @@
   .area-bottom {
     height: auto;
   }
+}
+
 /*
   assets/css/workspace.css — Daxini Systems Workstation
   Uses theme tokens from base.css
@@ -463,4 +465,117 @@
     }
     .panel { min-height: 350px; flex-shrink: 0; }
     #p-metrics { min-height: 150px; }
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   Responsive Workspace Grid (workspace/index.html)
+   ══════════════════════════════════════════════════════════ */
+.workspace-grid {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  background: var(--bg);
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "prompt"
+    "loop"
+    "trace"
+    "graph"
+    "metrics";
+}
+
+.workspace-grid .area-top { grid-area: prompt; border: 1px solid rgba(255,255,255,0.06); }
+.workspace-grid .area-left { grid-area: loop; border: 1px solid rgba(255,255,255,0.06); }
+.workspace-grid .area-center { grid-area: trace; border: 1px solid rgba(255,255,255,0.06); }
+.workspace-grid .area-right { grid-area: graph; border: 1px solid rgba(255,255,255,0.06); }
+.workspace-grid .area-bottom { grid-area: metrics; border: 1px solid rgba(255,255,255,0.06); }
+
+.workspace-grid .panel {
+  background: #0f1117;
+  border-radius: 14px;
+  padding: 0;
+}
+
+.workspace-grid .panel-header {
+  min-height: 48px;
+  padding: 12px 16px;
+  cursor: default;
+}
+
+.workspace-grid .panel-body {
+  max-height: 400px;
+  overflow: auto;
+  transition: max-height 0.28s ease, opacity 0.28s ease, padding 0.28s ease;
+}
+
+.workspace-grid .prompt-container {
+  background: transparent;
+  padding: 0;
+  gap: 12px;
+}
+
+.workspace-grid button,
+.workspace-grid .btn-run {
+  min-height: 48px;
+}
+
+@media (min-width: 1200px) {
+  .workspace-grid {
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-areas:
+      "prompt prompt prompt"
+      "loop trace graph"
+      "metrics metrics metrics";
+  }
+}
+
+@media (min-width: 700px) and (max-width: 1199px) {
+  .workspace-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "prompt prompt"
+      "loop trace"
+      "graph metrics";
+    height: auto;
+    min-height: calc(100vh - 64px);
+    overflow: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .workspace-grid {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .workspace-grid .panel {
+    margin-bottom: 14px;
+  }
+
+  .workspace-grid .panel-header {
+    cursor: pointer;
+  }
+
+  .workspace-grid .panel.is-collapsed .panel-body {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+
+  .workspace-grid .prompt-container {
+    flex-direction: column;
+  }
+
+  .workspace-grid .prompt-input {
+    min-height: 96px;
+  }
 }

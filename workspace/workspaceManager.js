@@ -38,6 +38,37 @@ class WorkspaceManager {
     });
 
     this.panels.trace.addEntry('SYSTEM', 'Workspace initialized. Awaiting objective...');
+    this.setupMobileCollapsiblePanels();
+  }
+
+  setupMobileCollapsiblePanels() {
+    const panels = document.querySelectorAll('.workspace-grid .panel');
+    if (!panels.length) return;
+
+    const applyState = () => {
+      const isMobile = window.matchMedia('(max-width: 700px)').matches;
+      panels.forEach((panel, index) => {
+        const header = panel.querySelector('.panel-header');
+        if (!header) return;
+
+        if (!header.dataset.bound) {
+          header.dataset.bound = 'true';
+          header.addEventListener('click', () => {
+            if (!window.matchMedia('(max-width: 700px)').matches) return;
+            panel.classList.toggle('is-collapsed');
+          });
+        }
+
+        if (isMobile && index > 0) {
+          panel.classList.add('is-collapsed');
+        } else {
+          panel.classList.remove('is-collapsed');
+        }
+      });
+    };
+
+    applyState();
+    window.addEventListener('resize', applyState);
   }
 
   async startExecution(prompt) {
