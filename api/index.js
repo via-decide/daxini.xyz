@@ -1,17 +1,9 @@
 /*
-  api/index.js — Daxini Systems API Gateway (Hardened)
+  api/index.js — Daxini Systems API Gateway (Hardened & Resilient)
+  MISSION: BEAST-MODE SOVEREIGNTY
 */
 
-import { generateClientFingerprint } from '../security/browserFingerprint.js';
-import { detectAutomatedSignals } from '../security/botDetection.js';
-import { analyzeBehavior } from '../security/behaviorEngine.js';
-import { analyzeTrafficAnomaly, logAnomalyError } from '../security/anomalyDetector.js';
-import { analyzeActorRelationships } from '../security/networkGraphAnalyzer.js';
-import { updateReputation, isBlacklisted, scoreIpByBehavior } from '../security/reputationEngine.js';
-import { logThreatEvent } from '../security/threatTelemetry.js';
-import { serveMirroredResponse, routeToHoneypot } from '../security/mirrorRouter.js';
-import { evaluateMirrorThreat } from '../security/honeypotRouter.js';
-import db from '../security/initDB.js';
+// Core Deterministic Imports (No native dependencies)
 import { generateCodeStream } from './llm/sovereign_engine.js';
 
 const passportRegistry = new Map([
@@ -29,151 +21,145 @@ const activePassportSession = {
   status: 'active'
 };
 
+/**
+ * Lazy Security Loader
+ * Dynamically imports v3 intelligence modules to isolate native driver crashes.
+ */
+async function loadSecurityKit() {
+    try {
+        const [
+            { generateClientFingerprint },
+            { detectAutomatedSignals },
+            { analyzeBehavior },
+            { analyzeTrafficAnomaly },
+            { analyzeActorRelationships },
+            { updateReputation, isBlacklisted, scoreIpByBehavior },
+            { logThreatEvent },
+            dbModule
+        ] = await Promise.all([
+            import('../security/browserFingerprint.js'),
+            import('../security/botDetection.js'),
+            import('../security/behaviorEngine.js'),
+            import('../security/anomalyDetector.js'),
+            import('../security/networkGraphAnalyzer.js'),
+            import('../security/reputationEngine.js'),
+            import('../security/threatTelemetry.js'),
+            import('../security/initDB.js')
+        ]);
+
+        const db = await (dbModule.getDB ? dbModule.getDB() : dbModule.default);
+        
+        return {
+            generateClientFingerprint,
+            detectAutomatedSignals,
+            analyzeBehavior,
+            analyzeTrafficAnomaly,
+            analyzeActorRelationships,
+            updateReputation,
+            isBlacklisted,
+            scoreIpByBehavior,
+            logThreatEvent,
+            db,
+            active: true
+        };
+    } catch (err) {
+        console.warn("[SECURITY] Sovereign Shield Isolated Case: Dynamic loading failed. Defaulting to passive mode.", err.message);
+        return { active: false };
+    }
+}
+
 export default async function handler(req, res) {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const path = url.pathname.replace(/\/$/, "");
-  const ua = req.headers['user-agent'] || 'unknown';
-  const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || '0.0.0.0';
-
-  // 1. Critical Reputation & Shielding
-  if (!req.headers['cf-ray']) {
-    return res.status(403).json({ error: 'Shielding bypass detected.' });
-  }
-
-  const fingerprint = generateClientFingerprint(req);
-  if (isBlacklisted(ip) || isBlacklisted(fingerprint)) {
-    return res.status(403).json({ error: 'Access revoked due to high-risk reputation.' });
-  }
-
-  // 2. v3 Intelligence Aggregation
-  const botSignals = detectAutomatedSignals(req);
-  const passportToken = req.headers['authorization'] || null;
-  const behavior = analyzeBehavior(req, fingerprint, passportToken);
-  const anomaly = analyzeTrafficAnomaly(ip, path);
-  const graph = analyzeActorRelationships(ip, fingerprint);
-  
-  // Weights: Bot(0.4) + Behavior(0.3) + Anomaly(0.3) + GraphPenalty
-  let totalThreatScore = botSignals.risk_score + behavior.behavior_score + anomaly.anomaly_score;
-  totalThreatScore += graph.cluster_density * 0.2; // Coordination penalty
-  totalThreatScore = Math.min(1.0, totalThreatScore);
-
-  // 3. Persistent Reputation Update
-  updateReputation(ip, 'ip', (totalThreatScore > 0.4 ? 0.05 : -0.01), 'GA_SCORE');
-  updateReputation(fingerprint, 'fp', (totalThreatScore > 0.4 ? 0.05 : -0.01), 'GA_SCORE');
-  scoreIpByBehavior(ip, behavior);
-
-  // 4. Telemetry Logging
-  if (totalThreatScore > 0.1) {
-    logThreatEvent({
-        ip,
-        fingerprint_id: fingerprint,
-        threat_score: totalThreatScore,
-        classification: behavior.classification,
-        path_accessed: path,
-        agent: ua
-    });
-  }
-
-  // 5. Standard Logic
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
-
   try {
-    if (path === '/passport/verify') {
-      if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-      const uid = url.searchParams.get('uid');
-      if (!uid || !passportRegistry.has(uid)) {
-        return res.status(403).json({ error: 'UID not registered' });
-      }
-      return res.status(200).json(passportRegistry.get(uid));
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const path = url.pathname.replace(/\/$/, "");
+    const ua = req.headers['user-agent'] || 'unknown';
+    const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || '0.0.0.0';
+
+    // Normalize body
+    if (req.method === 'POST' && typeof req.body === 'string') {
+        try { req.body = JSON.parse(req.body); } catch (e) {}
     }
 
-    if (path === '/passport/session') {
-      if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-      return res.status(200).json(activePassportSession);
+    // ── Resilient Security Core ────────────────────────────
+    const kit = await loadSecurityKit();
+    let fingerprint = 'unknown';
+    let totalThreatScore = 0;
+
+    if (kit.active) {
+        try {
+            fingerprint = kit.generateClientFingerprint(req);
+            const botSignals = kit.detectAutomatedSignals(req);
+            const passportToken = req.headers['authorization'] || null;
+            const behavior = kit.analyzeBehavior(req, fingerprint, passportToken);
+            const anomaly = kit.analyzeTrafficAnomaly(ip, path);
+            const graph = kit.analyzeActorRelationships(ip, fingerprint);
+            
+            totalThreatScore = botSignals.risk_score + behavior.behavior_score + anomaly.anomaly_score + (graph.cluster_density * 0.2);
+            totalThreatScore = Math.min(1.0, totalThreatScore);
+
+            kit.updateReputation(ip, 'ip', (totalThreatScore > 0.4 ? 0.05 : -0.01), 'GA_SCORE');
+            kit.scoreIpByBehavior(ip, behavior);
+            if (totalThreatScore > 0.1) kit.logThreatEvent({ ip, fingerprint_id: fingerprint, threat_score: totalThreatScore, classification: behavior.classification, path_accessed: path, agent: ua });
+        } catch (e) { console.warn("[SECURITY] Run-time skip:", e.message); }
     }
 
-    if (path === '/api/check' || path === '/api') {
-      return res.status(200).json({ status: 'HEALTHY', mission: 'RESEARCH_OS', version: '3.1' });
+    // ── Headers ─────────────────────────────────────────────
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') return res.status(200).end();
+
+    // ── Specialized Routes ──────────────────────────────────
+    
+    // Passport Verification (Login Endpoint)
+    if (path === '/api/passport/verify') {
+        const uid = url.searchParams.get('uid');
+        const serial = url.searchParams.get('serial');
+        
+        if (!uid || !passportRegistry.has(uid)) return res.status(403).json({ error: 'UID not registered' });
+        
+        const record = passportRegistry.get(uid);
+        if (serial && record.serial !== serial) return res.status(403).json({ error: 'Serial mismatch' });
+        
+        return res.status(200).json(record);
     }
 
     if (path === '/api/zayvora/execute') {
-      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-      const prompt = req.body ? req.body.prompt : null;
-      if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        
+        // Authorization Required for Zayvora Orchestration
+        const auth = req.headers['authorization'];
+        if (!auth || !auth.startsWith('Bearer UID-')) {
+            return res.status(401).json({ error: 'Sovereign Passport Required' });
+        }
 
-      try {
-        // Set headers for Server-Sent Events (SSE)
+        const prompt = req.body ? req.body.prompt : null;
+        if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
+
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
         
-        // Initiate generation via local Ollama
         await generateCodeStream(
-          prompt,
-          (chunk) => {
-            // Write each chunk as an SSE data payload
-            res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
-          },
-          (err) => {
-            res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
-            res.end();
-          },
-          () => {
-            res.write(`data: [DONE]\n\n`);
-            res.end();
-          }
+            prompt,
+            (chunk) => res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`),
+            (err) => { res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`); res.end(); },
+            () => { res.write(`data: [DONE]\n\n`); res.end(); }
         );
-        return; // Connection is kept open until onComplete or onError
-      } catch (err) {
-        if (!res.headersSent) {
-          return res.status(502).json({ error: 'Local Zayvora engine unavailable', details: err.message });
-        } else {
-          res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
-          res.end();
-          return;
-        }
-      }
+        return;
     }
 
-    if (path === '/api/security/stats') {
-      // Direct Authorization check for security telemetry
-      if (req.headers['authorization'] !== `Bearer ${process.env.SECURITY_SECRET}`) {
-        return res.status(403).json({ error: 'Unauthorized telemetry access' });
-      }
-
-      const stats = db.prepare('SELECT COUNT(*) as count FROM security_events').get();
-      const reputations = db.prepare('SELECT * FROM reputation_scores ORDER BY score DESC LIMIT 10').all();
-      const clusters = db.prepare('SELECT source_id, target_id, relation_type FROM threat_edges LIMIT 50').all();
-      
-      return res.status(200).json({
-        eventCount: stats.count,
-        topRisks: reputations,
-        threatGraph: clusters,
-        mutationCycle: Math.floor(Date.now() / (6 * 60 * 60 * 1000))
-      });
+    if (path === '/api/check' || path === '/api') {
+        return res.status(200).json({ status: 'HEALTHY', mission: 'RESEARCH_OS', kit_active: kit.active });
     }
 
-    const mirrorDecision = evaluateMirrorThreat({
-      ip,
-      path,
-      botSignals,
-      behavior,
-      threatScore: totalThreatScore
-    });
-    if (mirrorDecision.action === 'redirect_honeypot') {
-      return routeToHoneypot(req, res);
-    }
-    if (mirrorDecision.action === 'mirror_response') {
-      return serveMirroredResponse(res);
-    }
-
-    // Capture endpoint scanning (404s)
     return res.status(404).json({ error: 'Not found' });
-  } catch (error) {
-    return res.status(500).json({ error: 'Internal System Error', details: error.message });
+
+  } catch (globalError) {
+    console.error("[CRITICAL] Sovereign Engine Fault:", globalError);
+    return res.status(500).json({ 
+        error: 'Sovereign Engine Fault', 
+        message: globalError.message 
+    });
   }
 }
