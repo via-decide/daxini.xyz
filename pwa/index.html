@@ -1181,6 +1181,10 @@ html, body {
       <div class="settings-section">
         <h3>Account</h3>
         <div class="settings-row">
+          <label>Install app</label>
+          <button class="btn-danger" id="btn-install-pwa" style="border-color:var(--success);color:var(--success)" disabled>Install Unavailable</button>
+        </div>
+        <div class="settings-row">
           <label>Logged in as</label>
           <span id="settings-email" style="color:var(--text-muted);font-size:0.85rem">—</span>
         </div>
@@ -1492,6 +1496,7 @@ const state = {
   currentConversationId: null,
   conversations: [],
   isStreaming: false,
+  deferredInstallPrompt: null,
   abortController: null,
   inactivityTimer: null,
   connection: {
@@ -1513,6 +1518,22 @@ const $$ = (sel) => document.querySelectorAll(sel);
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function updateInstallButton() {
+  const btn = $('#btn-install-pwa');
+  if (!btn) return;
+  if (isStandaloneMode()) {
+    btn.textContent = 'Installed';
+    btn.disabled = true;
+    return;
+  }
+  btn.textContent = state.deferredInstallPrompt ? 'Install App' : 'Install Unavailable';
+  btn.disabled = !state.deferredInstallPrompt;
 }
 
 function getConfiguredEndpoint() {
@@ -1832,6 +1853,7 @@ async function enterApp() {
   $('#setting-endpoint').value = state.settings.endpoint === 'http://localhost:11434' ? '' : state.settings.endpoint;
   $('#setting-model').value = state.settings.model;
   $('#settings-email').textContent = state.currentUser.email;
+  updateInstallButton();
 
   // Load conversations
   await loadConversations();
@@ -2333,6 +2355,19 @@ $('#btn-export').addEventListener('click', async () => {
   URL.revokeObjectURL(url);
 });
 
+$('#btn-install-pwa').addEventListener('click', async () => {
+  if (!state.deferredInstallPrompt) return;
+  const promptEvent = state.deferredInstallPrompt;
+  promptEvent.prompt();
+  const choice = await promptEvent.userChoice;
+  if (choice && choice.outcome !== 'accepted') {
+    updateInstallButton();
+    return;
+  }
+  state.deferredInstallPrompt = null;
+  updateInstallButton();
+});
+
 $('#btn-delete-all').addEventListener('click', async () => {
   if (!confirm('This will permanently delete all conversations, preferences, and account data. Continue?')) return;
   await dbClear('conversations');
@@ -2373,8 +2408,20 @@ $$('.bottom-nav-item').forEach(btn => {
   });
 });
 
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  state.deferredInstallPrompt = event;
+  updateInstallButton();
+});
+
+window.addEventListener('appinstalled', () => {
+  state.deferredInstallPrompt = null;
+  updateInstallButton();
+});
+
 /* ─── Init ─── */
 async function init() {
+  updateInstallButton();
   const hasSession = await checkExistingSession();
   if (hasSession) {
     await enterApp();
