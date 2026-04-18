@@ -232,7 +232,7 @@
           <span>Branch: ${task.branch}</span>
           <span>+${task.lines} lines</span>
         </div>
-        <a class="zv-pr-link" href="#" onclick="return false;">View on GitHub ↗</a>
+        ${task.prUrl ? `<a class="zv-pr-link" href="${task.prUrl}" target="_blank" rel="noopener noreferrer">View on GitHub ↗</a>` : `<a class="zv-pr-link" href="#" onclick="return false;">Pending PR...</a>`}
       </div>
     `;
 
