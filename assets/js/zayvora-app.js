@@ -271,51 +271,13 @@
     const task = createTask(description);
     if (window.innerWidth <= 640) switchMobileTab('exec');
 
-    // ── Visual Beast-Mode Orchestration ──
-    const preSteps = [
-      { stage: 'FLIGHT_PLAN', delay: 800, msgs: [
-        { m: `🛫 Global Flight Plan (Operation Beast-Mode)`, t: 'accent' },
-        { m: `Mode: DIRECT_SYNTHESIS`, t: 'info' },
-        { m: `Repo: ${task.repo}`, t: 'info' }
-      ]},
-      { stage: 'PLAN', delay: 1200, msgs: [
-        { m: '🧠 Activating Beast Brain (Synapse self-history)...', t: 'accent' },
-        { m: 'Validating inputs and building task context.', t: 'info' },
-      ]},
-      { stage: 'AUDIT', delay: 1500, msgs: [
-        { m: `Inspecting ${task.repo} via local corpus.`, t: 'info' },
-      ]}
-    ];
-
-    for (let sIdx = 0; sIdx < preSteps.length; sIdx++) {
-      if (state.cancelRequested) return handleCancel(task);
-      const step = preSteps[sIdx];
-      state.currentStage = sIdx;
-      updateStages(sIdx, 'active');
-      updateProgress((sIdx / 6) * 100);
-      for (const msg of step.msgs) {
-        addLog(step.stage, msg.m, msg.t);
-        await sleep(300 + Math.random() * 200);
-      }
-      await sleep(step.delay);
-    }
-
-    state.currentStage = 3; // GENERATE
-    updateStages(3, 'active');
-    addLog('GENERATE', '⚙️ BEAST-MODE: Synthesizing natively via local Zayvora:latest...', 'accent');
+    addLog('INIT', 'Connecting to local zayvora:latest...', 'info');
 
     try {
-      const auth = JSON.parse(localStorage.getItem('zv_passport') || '{}');
       const response = await fetch('/api/zayvora/execute', {
         method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${auth.uid || ''}`
-        },
-        body: JSON.stringify({ 
-          prompt: description,
-          github_token: auth.ghToken || null
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: description })
       });
 
       if (!response.ok) {
@@ -365,37 +327,8 @@
         }
       }
 
-      addLog('GENERATE', `✅ Synthesized code locally — syntax verification passed`, 'success');
-
-      // ── Post-Generation Demo Steps ──
-      const postSteps = [
-        { stage: 'PUSH', delay: 1500, msgs: [
-          { m: `Creating branch ${task.branch}...`, t: 'info' },
-          { m: '📝 Committing synthesized file...', t: 'accent' },
-          { m: `✅ File committed (Simulated)`, t: 'success' },
-        ]},
-        { stage: 'PR', delay: 1000, msgs: [
-          { m: 'Opening pull request...', t: 'info' },
-          { m: '✅ PR opened (Simulated/Local)', t: 'success' },
-        ]}
-      ];
-
-      for (let sIdx = 0; sIdx < postSteps.length; sIdx++) {
-        if (state.cancelRequested) return handleCancel(task);
-        const step = postSteps[sIdx];
-        state.currentStage = 4 + sIdx;
-        updateStages(4 + sIdx, 'active');
-        updateProgress(((4 + sIdx) / 6) * 100);
-        for (const msg of step.msgs) {
-          addLog(step.stage, msg.m, msg.t);
-          await sleep(300 + Math.random() * 200);
-        }
-        await sleep(step.delay);
-      }
-
       updateProgress(100);
-      updateStages(6, 'done');
-      addLog('COMPLETE', 'Synthesis & simulated push finished safely.', 'success');
+      addLog('COMPLETE', 'Synthesis finished safely.', 'success');
       
       task.lines = fullCode.split('\\n').length;
       task.prUrl = null;
@@ -408,11 +341,6 @@
       addLog('ERROR', 'Failed to execute: ' + err.message, 'error');
       finishTask(task, 'failed');
     }
-  }
-
-  function handleCancel(task) {
-    addLog('CANCELLED', 'Pipeline cancelled by user.', 'warn');
-    finishTask(task, 'failed');
   }
 
   function finishTask(task, status) {
