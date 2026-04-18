@@ -652,7 +652,7 @@
   .zv-layout {
     grid-template-columns: 1fr 1fr;
   }
-  .zv-panel:first-child {
+  .zv-panel:last-child {
     display: none;
   }
 }
