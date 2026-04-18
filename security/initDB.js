@@ -10,8 +10,14 @@ import path from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dbPath = path.join(__dirname, '../data/telemetry.db');
-const db = new Database(dbPath);
+let db;
+try {
+  const dbPath = path.join(__dirname, '../data/telemetry.db');
+  db = new Database(dbPath);
+} catch (err) {
+  // Fallback to in-memory for serverless/read-only environments (Vercel)
+  db = new Database(':memory:');
+}
 
 // Create security_events table
 db.prepare(`
