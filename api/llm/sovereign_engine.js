@@ -8,7 +8,7 @@
  * ZERO EXTERNAL API DEPENDENCIES.
  */
 
-const OLLAMA_ENDPOINT = 'http://127.0.0.1:11434/api/generate';
+const OLLAMA_ENDPOINT = 'https://injuries-grown-relations-throat.trycloudflare.com/api/generate';
 const MODEL = 'zayvora:latest';
 
 /**
