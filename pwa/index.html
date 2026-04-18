@@ -1099,6 +1099,9 @@ html, body {
         </div>
       </div>
       <div class="connection-banner hidden" id="connection-banner" aria-live="polite">
+        <div class="connection-banner-title">⚠️ Connection unavailable</div>
+        <ul>
+          <li>We can’t reach your local AI service right now.</li>
         <div class="connection-banner-title">⚠️ Zayvora backend unavailable</div>
         <ul>
           <li>Is your local Zayvora service running?</li>
@@ -1107,6 +1110,7 @@ html, body {
           <li id="retry-next-attempt">Retrying... (Next attempt in 5s)</li>
         </ul>
         <div class="connection-banner-actions">
+          <button id="btn-connection-retry" type="button">Connect Now</button>
           <button id="btn-connection-retry" type="button">Retry Now</button>
           <button id="btn-manual-instructions" type="button">Connection Help</button>
         </div>
@@ -2123,6 +2127,7 @@ async function sendMessage() {
     await queuePendingMessage(conv.id, text);
     conv.messages.push({
       role: 'assistant',
+      content: '⚠️ Connection unavailable\n\n• We can’t reach your local AI service right now.\n• Your message has been queued and will auto-send when connection restores.\n• Retrying every 5 seconds.',
       content: '⚠️ Zayvora backend unavailable\n\n• Is your local Zayvora service running?\n• Your message has been queued and will auto-send when connection restores.\n• Retrying every 5 seconds.',
       content: '⚠️ Zayvora backend unavailable\n\n• Is Zayvora running? (' + state.settings.endpoint + ')\n• Your message has been queued and will auto-send when connection restores.\n• Retrying every 5 seconds.',
       timestamp: Date.now()
@@ -2222,6 +2227,7 @@ async function streamResponse(conv, prompt) {
       setConnectionStatus('disconnected');
       state.connection.nextRetryAt = Date.now() + 5000;
       updateRetryCountdown();
+      fullResponse = fullResponse || '⚠️ Connection unavailable\n\n• We can’t reach your local AI service right now.\n• Your message will be queued and sent when connection restores\n• Retrying... (Next attempt in 5s)\n\nUse [Connect Now] from the status banner for immediate retry.';
       fullResponse = fullResponse || '⚠️ Zayvora backend unavailable\n\n• Is your local Zayvora service running?\n• Your message will be queued and sent when connection restores\n• Retrying... (Next attempt in 5s)\n\nUse [Retry Now] from the status banner for immediate retry.';
       fullResponse = fullResponse || `⚠️ Zayvora backend unavailable\n\n• Is Zayvora running? (${state.settings.endpoint})\n• Your message will be queued and sent when connection restores\n• Retrying... (Next attempt in 5s)\n\nUse [Retry Now] from the status banner for immediate retry.`;
     }
