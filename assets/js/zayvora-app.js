@@ -207,47 +207,6 @@
     }).join('');
   }
 
-  // ── Output Preview ──────────────────────────────────────
-  function showOutput(task) {
-    const container = $('#zv-output');
-    if (!container) return;
-
-    const highlighted = highlightPython(DEMO_CODE);
-
-    container.innerHTML = `
-      <div class="zv-output-section">
-        <div class="zv-output-header">
-          <div class="zv-output-title">Generated Code</div>
-          <button class="zv-copy-btn" id="zv-copy-code">Copy</button>
-        </div>
-        <div class="zv-code-block" id="zv-code-content">${highlighted}</div>
-      </div>
-
-      <div class="zv-pr-card">
-        <div class="zv-pr-header">
-          <span class="zv-pr-icon">🔀</span>
-          <span class="zv-pr-title">${escapeHtml(task.description.slice(0, 50))}</span>
-        </div>
-        <div class="zv-pr-meta">
-          <span>Branch: ${task.branch}</span>
-          <span>+${task.lines} lines</span>
-        </div>
-        ${task.prUrl ? `<a class="zv-pr-link" href="${task.prUrl}" target="_blank" rel="noopener noreferrer">View on GitHub ↗</a>` : `<a class="zv-pr-link" href="#" onclick="return false;">Pending PR...</a>`}
-      </div>
-    `;
-
-    // Copy handler
-    const copyBtn = $('#zv-copy-code');
-    if (copyBtn) {
-      copyBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(DEMO_CODE).then(() => {
-          copyBtn.textContent = 'Copied!';
-          setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
-        });
-      });
-    }
-  }
-
   function clearOutput() {
     const container = $('#zv-output');
     if (container) container.innerHTML = '';
@@ -258,7 +217,7 @@
     state.executionState = 'running';
     state.cancelRequested = false;
     state.logs = [];
-    state.currentStage = -1;
+    state.currentStage = 0;
 
     // Clear previous logs
     const logsEl = $('#zv-logs');
@@ -267,6 +226,7 @@
 
     updateProgress(0);
     updateExecStatus('Running...');
+    updateStages(0, 'active');
 
     const task = createTask(description);
     if (window.innerWidth <= 640) switchMobileTab('exec');
@@ -284,18 +244,21 @@
         throw new Error(`Server returned ${response.status}`);
       }
 
+      state.currentStage = 2;
+      updateStages(2, 'active');
       addLog('LLM', 'Stream connected. Synthesizing...', 'accent');
       updateProgress(30);
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
-      
+
       let fullCode = "";
-      
+
       while (true) {
         if (state.cancelRequested) {
           reader.cancel();
           addLog('CANCELLED', 'Pipeline cancelled by user.', 'warn');
+          updateStages(state.currentStage, 'failed');
           finishTask(task, 'failed');
           return;
         }
@@ -304,8 +267,8 @@
         if (done) break;
 
         const str = decoder.decode(value, { stream: true });
-        const lines = str.split('\\n');
-        
+        const lines = str.split('\n');
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const dataStr = line.slice(6);
@@ -318,8 +281,9 @@
               }
               if (data.text) {
                 fullCode += data.text;
+                updateProgress(Math.min(90, 30 + Math.floor(fullCode.length / 100)));
                 if (fullCode.length % 200 === 0) {
-                    addLog('STREAM', `Synthesizing tokens... (${fullCode.length} bytes)`, 'info');
+                  addLog('STREAM', `Synthesizing tokens... (${fullCode.length} bytes)`, 'info');
                 }
               }
             } catch (e) {}
@@ -328,17 +292,19 @@
       }
 
       updateProgress(100);
+      updateStages(STAGES.length, 'done');
       addLog('COMPLETE', 'Synthesis finished safely.', 'success');
-      
-      task.lines = fullCode.split('\\n').length;
+
+      task.lines = fullCode.split('\n').length;
       task.prUrl = null;
       task.outputCode = fullCode;
-      
+
       finishTask(task, 'success');
       showRealOutput(task, fullCode);
 
     } catch (err) {
       addLog('ERROR', 'Failed to execute: ' + err.message, 'error');
+      updateStages(state.currentStage, 'failed');
       finishTask(task, 'failed');
     }
   }
@@ -357,7 +323,7 @@
     if (!container) return;
 
     let pureCode = code;
-    const match = code.match(/```[a-z]*\\n([\\s\\S]*?)```/);
+    const match = code.match(/```[a-z]*\n([\s\S]*?)```/);
     if (match) pureCode = match[1];
 
     const highlighted = highlightPython(pureCode);
@@ -368,7 +334,7 @@
           <div class="zv-output-title">Sovereign Output (zayvora:latest)</div>
           <button class="zv-copy-btn" id="zv-copy-code">Copy</button>
         </div>
-        <div class="zv-code-block" id="zv-code-content">\${highlighted}</div>
+        <div class="zv-code-block" id="zv-code-content">${highlighted}</div>
       </div>
       <div class="zv-pr-card">
         <div class="zv-pr-header">
@@ -377,7 +343,7 @@
         </div>
         <div class="zv-pr-meta">
           <span>0-API Sovereign Inference</span>
-          <span>+\${task.lines || 0} lines</span>
+          <span>+${task.lines || 0} lines</span>
         </div>
       </div>
     `;
@@ -597,126 +563,6 @@
     if (hrs < 24) return `${hrs}h ago`;
     return `${Math.floor(hrs / 24)}d ago`;
   }
-
-  // ── Demo Code Sample ───────────────────────────────────
-  const DEMO_CODE = `#!/usr/bin/env python3
-\"\"\"
-Cognitive Bias Detector for Solo Founders
-Antigravity Beast-Mode Synthesis (v3.0.0)
-\"\"\"
-
-import argparse
-import json
-import logging
-import re
-import sys
-from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
-
-logger = logging.getLogger("BiasDetector")
-
-@dataclass
-class BiasAlert:
-    \"\"\"A detected cognitive bias in a decision narrative.\"\"\"
-    bias_type: str
-    severity: float
-    evidence: str
-    counter_question: str
-    source_segment: str
-    detected_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
-
-    def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
-
-# Taxonomy of 20+ cognitive biases with detection patterns
-BIAS_TAXONOMY = {
-    "confirmation_bias": {
-        "patterns": [r"\\bproves\\b", r"\\bknew it\\b", r"\\bobviously\\b"],
-        "severity_weight": 0.85,
-        "counter": "What evidence would change your mind?"
-    },
-    "sunk_cost_fallacy": {
-        "patterns": [r"\\balready invested\\b", r"\\btoo far\\b", r"\\bcan.t stop now\\b"],
-        "severity_weight": 0.90,
-        "counter": "If you were starting fresh today, would you make this same choice?"
-    },
-    "anchoring_bias": {
-        "patterns": [r"\\bfirst offer\\b", r"\\binitial estimate\\b", r"\\boriginal plan\\b"],
-        "severity_weight": 0.70,
-        "counter": "What if the initial number was completely different?"
-    },
-    "survivorship_bias": {
-        "patterns": [r"\\bthey succeeded\\b", r"\\bjust like\\b.*\\bdid\\b"],
-        "severity_weight": 0.80,
-        "counter": "How many others tried the same approach and failed?"
-    },
-}
-
-class BiasPatternEngine:
-    \"\"\"Compiled regex-based bias detection engine.\"\"\"
-
-    def __init__(self):
-        self.compiled = {
-            bias: {
-                "patterns": [re.compile(p, re.I) for p in data["patterns"]],
-                "weight": data["severity_weight"],
-                "counter": data["counter"],
-            }
-            for bias, data in BIAS_TAXONOMY.items()
-        }
-
-    def scan(self, text: str) -> List[BiasAlert]:
-        alerts = []
-        for bias_type, config in self.compiled.items():
-            for pattern in config["patterns"]:
-                matches = pattern.finditer(text)
-                for match in matches:
-                    alerts.append(BiasAlert(
-                        bias_type=bias_type,
-                        severity=config["weight"],
-                        evidence=match.group(),
-                        counter_question=config["counter"],
-                        source_segment=text[max(0,match.start()-40):match.end()+40],
-                    ))
-        return alerts
-
-class FounderNarrativeAnalyzer:
-    \"\"\"Multi-pass bias detection for founder decision narratives.\"\"\"
-
-    def __init__(self):
-        self.engine = BiasPatternEngine()
-        logger.info("FounderNarrativeAnalyzer initialized.")
-
-    def analyze(self, text: str) -> Dict[str, Any]:
-        segments = re.split(r'(?<=[.!?])\\s+', text.strip())
-        all_alerts = []
-        for seg in segments:
-            if len(seg.strip()) > 15:
-                all_alerts.extend(self.engine.scan(seg))
-
-        health_score = max(0, 100 - len(all_alerts) * 12)
-        return {
-            "alerts": all_alerts,
-            "health_score": health_score,
-            "total_biases": len(all_alerts),
-            "segments_analyzed": len(segments),
-        }
-
-def main():
-    parser = argparse.ArgumentParser(description="Bias Detector CLI")
-    parser.add_argument("-t", "--text", required=True)
-    parser.add_argument("--format", choices=["json", "md"], default="json")
-    args = parser.parse_args()
-
-    analyzer = FounderNarrativeAnalyzer()
-    result = analyzer.analyze(args.text)
-    print(json.dumps(result, indent=2, default=str))
-
-if __name__ == "__main__":
-    main()`;
 
   // ── Boot ────────────────────────────────────────────────
   if (document.readyState === 'loading') {
