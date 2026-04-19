@@ -5,6 +5,7 @@ import { executeAction } from '../logichub/logichubBridge.js';
 import { runResearch } from '../nex/nexBridge.js';
 import { openModule } from '../engine/moduleLoader.js';
 import { updateSkill } from '../social/skillhexBridge.js';
+import { renderUpdates } from '../ui/updatesPanel.js';
 
 function pushLog(message) {
   const node = document.getElementById('workspace-log');
@@ -46,11 +47,17 @@ function renderWorkspace() {
       <div class="workspace-panel" id="panel-right">
         <h3>Execution / Research / Skills</h3>
         <div class="workspace-log" id="workspace-log"></div>
+        <div class="updates-header">
+          <h3>What's New</h3>
+          <div id="updates-badge" hidden>NEW</div>
+        </div>
+        <div id="whats-new" class="updates-panel"></div>
       </div>
     </div>
   `;
 
   wireWorkspaceEvents();
+  renderUpdates();
 }
 
 function renderLogin() {
