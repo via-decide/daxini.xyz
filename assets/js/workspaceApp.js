@@ -33,7 +33,10 @@ async function runReasoning() {
     if (!prompt) return;
 
     // Reset Components
-    panels.forEach(p => p.reset ? p.reset() : null);
+    panels.forEach(p => {
+        if (!p.reset) return;
+        try { p.reset(); } catch (e) { console.warn('Panel reset failed', e); }
+    });
     if (trace.clear) trace.clear();
     if (graph.clear) graph.clear();
     
@@ -42,7 +45,7 @@ async function runReasoning() {
     addLog('system', 'Initializing reasoning architecture...');
 
     try {
-        const token = localStorage.getItem('zayvora_token') || 'sovereign_guest';
+        const token = sessionStorage.getItem('zayvora_token') || 'sovereign_guest';
         
         const response = await fetch('/api/zayvora/execute', {
             method: 'POST',
