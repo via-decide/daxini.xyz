@@ -18,50 +18,67 @@
         <a href="../" class="nav-brand" style="font-family:'Space Grotesk',sans-serif;font-weight:800;letter-spacing:1px;">DAXINI // APORAKSHA</a>
         <span style="font-size:12px;color:#93c5fd;">Unified Ecosystem Workspace</span>
     </nav>
-    <div id="workspace-app"></div>
-    <script type="module" src="../src/workspace/workspace.js"></script>
 
-    <main class="workspace-layout">
-        <aside class="panel" id="p-reasoning" aria-label="Reasoning Architecture">
-            <header class="p-header">Modules / Tools</header>
-            <div class="p-content" id="mount-reasoning-loop"></div>
+    <main class="workspace-layout" aria-label="Daxini workspace mission control">
+        <aside class="workspace-panel template-panel" aria-label="Task templates">
+            <h2>What do you want to do today?</h2>
+            <div id="task-templates" class="template-list"></div>
         </aside>
 
-        <section class="panel" id="p-trace" aria-label="Zayvora reasoning console">
-            <header class="p-header">Zayvora Reasoning Console</header>
-            <div class="p-content" id="mount-console-log">
-                <div class="log-entry system">[SYSTEM] Bridge established. Zayvora-Nex gateway ready.</div>
+        <section class="workspace-panel center-panel" aria-label="Main workspace">
+            <div class="task-header">
+                <h1>AI Mission Control</h1>
+                <p>Launch multi-step runs with live reasoning and verification.</p>
             </div>
-            <div class="workspace-input">
-                <input type="text" id="main-prompt" placeholder="Input engineering constraints or research target..." autocomplete="off">
-                <button id="send-prompt">EXECUTE ⤖</button>
+
+            <div class="prompt-area">
+                <label for="main-prompt">Mission Prompt</label>
+                <textarea id="main-prompt" rows="6" placeholder="Describe what you want Daxini to research, build, or solve..."></textarea>
+                <div class="prompt-actions">
+                    <button id="run-task" type="button">RUN TASK</button>
+                    <div id="task-progress" class="task-progress" aria-live="polite"></div>
+                </div>
             </div>
+
+            <section class="result-area" aria-live="polite">
+                <h3>Result</h3>
+                <div id="result-output" class="result-output">Waiting for task execution...</div>
+            </section>
+
+            <section class="metrics-area" aria-label="Task metrics">
+                <h3>Task Metrics</h3>
+                <div id="metrics-output" class="metrics-output"></div>
+            </section>
+
+            <section class="live-log mobile-log" aria-label="Live execution log on mobile">
+                <h3>Live Execution Feed</h3>
+                <div id="live-log-mobile" class="live-log-view"></div>
+            </section>
         </section>
 
-        <aside class="panel" id="p-harness" aria-label="Live Harness">
-            <header class="p-header">
-                Live Harness
-                <span class="p-meta" id="trace-meta">0 steps</span>
-            </header>
-            <div class="harness-controls" id="harness-controls">
-                <button data-view="reasoning" class="active">Reasoning</button>
-                <button data-view="execution" class="active">Execution</button>
-                <button data-view="research" class="active">Research</button>
-                <label class="debug-toggle">
-                    <input type="checkbox" id="debug-toggle-input">
-                    Debug
-                </label>
-            </div>
-            <div class="p-content" id="zayvora-harness" aria-live="polite"></div>
-            <div class="p-content" id="router-log" aria-live="polite"></div>
-        </aside>
+        <aside class="workspace-panel engine-panel" id="engine-panel" aria-label="Live engine panel">
+            <section class="reasoning-panel">
+                <h3>Reasoning Graph</h3>
+                <div id="reasoning-graph"></div>
+            </section>
 
-        <footer class="panel" id="p-metrics" aria-label="Inference Metrics">
-            <header class="p-header">System Telemetry</header>
-            <div class="p-content" id="mount-metrics"></div>
-        </footer>
+            <section class="live-log" aria-label="Live execution log">
+                <h3>Live Execution Feed</h3>
+                <div id="live-log" class="live-log-view"></div>
+            </section>
+        </aside>
     </main>
 
-    <script type="module" src="./assets/js/workspaceApp.js"></script>
+    <div id="command-palette" class="command-palette" hidden>
+        <div class="palette-card" role="dialog" aria-modal="true" aria-labelledby="palette-title">
+            <h3 id="palette-title">Quick Actions</h3>
+            <button data-action="research">Research</button>
+            <button data-action="create">Create</button>
+            <button data-action="analyze">Analyze</button>
+            <button data-action="run">Run task</button>
+        </div>
+    </div>
+
+    <script type="module" src="./main.js"></script>
 </body>
 </html>
