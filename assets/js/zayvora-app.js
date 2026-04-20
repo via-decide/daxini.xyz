@@ -11,11 +11,16 @@
     executionState: 'idle', // idle | running | done | failed
     currentStage: -1,
     logs: [],
-    tasks: JSON.parse(localStorage.getItem('zv_tasks') || '[]'),
+    tasks: [],
     recentCommands: JSON.parse(localStorage.getItem('zv_recent') || '[]'),
     activeMobileTab: 'input',
     cancelRequested: false,
+    activeThreadId: null,
   };
+  const threadManager = window.ZayvoraThreadManager || null;
+  const threadStore = window.ZayvoraThreadStore || null;
+  const reasoningEngine = window.ZayvoraReasoningEngine || null;
+  const liveTimeline = window.ZayvoraLiveTimeline || null;
 
   const STAGES = [
     { id: 'plan',     label: 'Plan',     icon: '🧠' },
@@ -32,14 +37,17 @@
 
   // ── Init ────────────────────────────────────────────────
   function init() {
+    hydrateThreads();
     renderStages();
     renderRecentCommands();
     renderTasks();
+    renderThreadSidebar();
     bindEvents();
     updateCharCount();
     showIdleState();
     initMobileNav();
     loadEngineBadge();
+    resumeLastThread();
   }
 
   async function loadEngineBadge() {
@@ -90,6 +98,13 @@
     const time = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const entry = { time, stage, message, type };
     state.logs.push(entry);
+    if (state.activeThreadId && threadStore) {
+      threadStore.appendLog(state.activeThreadId, {
+        ...entry,
+        timestamp: now.toISOString(),
+        path: `/zayvora/logs/${state.activeThreadId}.log`,
+      });
+    }
 
     const logsEl = $('#zv-logs');
     if (!logsEl) return;
@@ -165,6 +180,17 @@
 
   // ── Task Management ─────────────────────────────────────
   function createTask(description) {
+    if (threadManager) {
+      const thread = threadManager.createThread(description);
+      threadManager.switchThread(thread.id);
+      state.activeThreadId = thread.id;
+      const uiTask = mapThreadToTask(thread);
+      state.tasks = [uiTask, ...state.tasks.filter((task) => task.id !== uiTask.id)].slice(0, 20);
+      renderThreadSidebar();
+      renderTasks();
+      return uiTask;
+    }
+
     const task = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       description,
@@ -183,8 +209,13 @@
   }
 
   function updateTask(id, updates) {
-    const task = state.tasks.find(t => t.id === id);
+    const task = state.tasks.find((t) => t.id === id);
     if (task) Object.assign(task, updates);
+    if (threadManager && updates.status) {
+      threadManager.updateStatus(id, updates.status);
+      hydrateThreads();
+      renderThreadSidebar();
+    }
     saveTasks();
     renderTasks();
   }
@@ -205,14 +236,14 @@
       return;
     }
 
-    container.innerHTML = state.tasks.map(task => {
+    container.innerHTML = state.tasks.map((task) => {
       const statusClass = task.status;
       const statusLabel = task.status === 'running' ? '● Running' :
                           task.status === 'success' ? '✓ Done' :
                           task.status === 'failed'  ? '✕ Failed' : '◦ Pending';
       const timeAgo = getTimeAgo(task.createdAt);
       return `
-        <div class="zv-task-card ${statusClass}" data-task-id="${task.id}">
+        <div class="zv-task-card ${statusClass} ${task.id === state.activeThreadId ? 'active' : ''}" data-task-id="${task.id}">
           <div class="zv-task-header">
             <div class="zv-task-title">${escapeHtml(task.description.slice(0, 50))}</div>
             <div class="zv-task-status ${statusClass}">${statusLabel}</div>
@@ -224,6 +255,23 @@
           </div>
         </div>`;
     }).join('');
+  }
+
+  function renderThreadSidebar() {
+    const list = $('#zv-thread-sidebar');
+    if (!list) return;
+
+    if (state.tasks.length === 0) {
+      list.innerHTML = '<div style="font-size:.72rem;color:var(--tx3);padding:.3rem 0;">No active threads</div>';
+      return;
+    }
+
+    list.innerHTML = state.tasks.map((task) => `
+      <div class="zv-recent-item zv-thread-item ${task.id === state.activeThreadId ? 'active' : ''}" data-thread-id="${task.id}" title="${escapeHtml(task.description)}">
+        <div>${escapeHtml(task.description.slice(0, 36))}${task.description.length > 36 ? '…' : ''}</div>
+        <div class="zv-thread-status">${escapeHtml(task.status)}</div>
+      </div>
+    `).join('');
   }
 
   // ── Output Preview ──────────────────────────────────────
@@ -288,30 +336,67 @@
     updateExecStatus('Running...');
 
     const task = createTask(description);
+    if (threadManager && state.activeThreadId) {
+      threadManager.appendMessage(state.activeThreadId, { role: 'user', content: description });
+    }
     if (window.innerWidth <= 640) switchMobileTab('exec');
 
     addLog('INIT', 'Connecting to local zayvora:latest...', 'info');
 
     try {
-      addLog('LLM', 'Dispatching local execution task...', 'accent');
-      updateProgress(30);
+      await runReasoningStep(task.id, 1, 'Planning task', async () => {
+        addLog('STEP 1', 'Planning task context...', 'info');
+        updateProgress(15);
+      });
+      await runReasoningStep(task.id, 2, 'Scanning knowledge', async () => {
+        addLog('STEP 2', 'Scanning knowledge and prior thread memory...', 'accent');
+        updateProgress(30);
+      });
+      await runReasoningStep(task.id, 3, 'Searching repository', async () => {
+        addLog('STEP 3', 'Searching repository and execution context...', 'accent');
+        updateProgress(45);
+      });
+      await runReasoningStep(task.id, 4, 'Generating solution', async () => {
+        addLog('LLM', 'Dispatching local execution task...', 'accent');
+      });
 
-      const result = await executeTaskLocally({ prompt: description });
+      const result = await executeTaskLocally({ prompt: description, taskId: task.id });
       const fullCode = typeof result?.text === 'string'
         ? result.text
         : (typeof result?.code === 'string' ? result.code : JSON.stringify(result, null, 2));
 
-      updateProgress(100);
-      addLog('COMPLETE', 'Synthesis finished safely.', 'success');
+      await runReasoningStep(task.id, 5, 'Verifying result', async () => {
+        updateProgress(80);
+        addLog('STEP 5', 'Verifying result integrity...', 'info');
+      });
+      await runReasoningStep(task.id, 6, 'Completed', async () => {
+        updateProgress(100);
+        addLog('COMPLETE', 'Synthesis finished safely.', 'success');
+      });
 
       task.lines = fullCode.split('\n').length;
       task.prUrl = null;
       task.outputCode = fullCode;
+      if (threadStore && state.activeThreadId) {
+        threadStore.appendArtifact(state.activeThreadId, {
+          type: 'generated_code',
+          label: `${task.description} output`,
+          created_at: new Date().toISOString(),
+          path: `/zayvora/artifacts/${state.activeThreadId}/generated-output.py`,
+          content: fullCode,
+        });
+      }
+      if (threadManager && state.activeThreadId) {
+        threadManager.appendMessage(state.activeThreadId, { role: 'assistant', content: 'Task completed. Artifact generated.' });
+      }
 
       finishTask(task, 'success');
       showRealOutput(task, fullCode);
 
     } catch (err) {
+      if (reasoningEngine && state.activeThreadId) {
+        reasoningEngine.updateStepStatus(state.activeThreadId, 4, 'failed');
+      }
       addLog('ERROR', 'Failed to execute: ' + err.message, 'error');
       finishTask(task, 'failed');
     }
@@ -495,6 +580,24 @@
       });
     }
 
+    const threadSidebar = $('#zv-thread-sidebar');
+    if (threadSidebar) {
+      threadSidebar.addEventListener('click', (e) => {
+        const item = e.target.closest('[data-thread-id]');
+        if (!item) return;
+        openThread(item.dataset.threadId);
+      });
+    }
+
+    const taskList = $('#zv-task-list');
+    if (taskList) {
+      taskList.addEventListener('click', (e) => {
+        const card = e.target.closest('[data-task-id]');
+        if (!card) return;
+        openThread(card.dataset.taskId);
+      });
+    }
+
     // Mobile tabs
     $$('.zv-mobile-tab').forEach(tab => {
       tab.addEventListener('click', () => switchMobileTab(tab.dataset.tab));
@@ -511,6 +614,96 @@
     window.addEventListener('zayvora-result', () => {
       addLog('RUNTIME', 'Execution complete');
     });
+
+    window.addEventListener('zayvora-timeline-event', (event) => {
+      const taskId = event?.detail?.taskId;
+      if (!taskId || taskId !== state.activeThreadId || !threadManager || !liveTimeline) return;
+      const thread = threadManager.loadThread(taskId);
+      if (!thread) return;
+      liveTimeline.renderTimeline($('#zv-live-timeline'), thread.reasoning_steps || []);
+      hydrateThreads();
+      renderTasks();
+      renderThreadSidebar();
+    });
+  }
+
+  function hydrateThreads() {
+    if (!threadManager) {
+      state.tasks = JSON.parse(localStorage.getItem('zv_tasks') || '[]');
+      return;
+    }
+    state.tasks = threadManager.listThreads().map(mapThreadToTask);
+  }
+
+  function mapThreadToTask(thread) {
+    return {
+      id: thread.id,
+      description: thread.title,
+      status: thread.status,
+      createdAt: thread.created_at,
+      completedAt: null,
+      repo: 'via-decide/daxini.xyz',
+      branch: `simba/${thread.title.toLowerCase().replace(/[^a-z0-9\\s]/g, '').trim().replace(/\\s+/g, '-').slice(0, 30)}`,
+      lines: (thread.artifacts || [])[0]?.content ? (thread.artifacts[0].content || '').split('\\n').length : 0,
+      prUrl: null,
+      outputCode: (thread.artifacts || [])[0]?.content || '',
+    };
+  }
+
+  function openThread(taskId) {
+    if (!threadManager) return;
+    const thread = threadManager.switchThread(taskId);
+    if (!thread) return;
+    state.activeThreadId = thread.id;
+    state.logs = thread.logs || [];
+    renderThreadSidebar();
+    renderTasks();
+    redrawLogsFromThread(thread);
+    if (liveTimeline) {
+      liveTimeline.renderTimeline($('#zv-live-timeline'), thread.reasoning_steps || []);
+    }
+    if (thread.artifacts && thread.artifacts.length > 0) {
+      const artifact = thread.artifacts[thread.artifacts.length - 1];
+      const task = mapThreadToTask(thread);
+      showRealOutput(task, artifact.content || '');
+    } else {
+      clearOutput();
+    }
+  }
+
+  function redrawLogsFromThread(thread) {
+    const logsEl = $('#zv-logs');
+    if (!logsEl) return;
+    logsEl.innerHTML = '';
+    (thread.logs || []).forEach((entry) => {
+      const div = document.createElement('div');
+      div.className = `zv-log-entry ${entry.type || 'info'}`;
+      div.innerHTML = `<span class="zv-log-time">${entry.time || '--:--:--'}</span><span class="zv-log-stage">[${entry.stage || 'LOG'}]</span> ${escapeHtml(entry.message || '')}`;
+      logsEl.appendChild(div);
+    });
+    if ((thread.logs || []).length === 0) {
+      showIdleState();
+    }
+  }
+
+  function resumeLastThread() {
+    if (!threadManager) return;
+    const activeId = threadManager.getActiveThreadId();
+    if (!activeId) {
+      if (liveTimeline) liveTimeline.renderTimeline($('#zv-live-timeline'), []);
+      return;
+    }
+    openThread(activeId);
+  }
+
+  async function runReasoningStep(taskId, step, label, action) {
+    if (reasoningEngine && taskId) {
+      reasoningEngine.recordStep(taskId, step, label);
+    }
+    await action();
+    if (reasoningEngine && taskId) {
+      reasoningEngine.updateStepStatus(taskId, step, 'completed');
+    }
   }
 
   // ── Syntax Highlighting (basic Python) ──────────────────

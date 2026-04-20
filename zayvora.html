@@ -75,6 +75,9 @@
       </div>
 
       <div class="zv-panel-body">
+        <div class="zv-recent-header">Task Threads</div>
+        <div class="zv-recent-list" id="zv-thread-sidebar"></div>
+
         <div class="zv-recent-header">Recent Commands</div>
         <div class="zv-recent-list" id="zv-recent-list"></div>
 
@@ -109,6 +112,11 @@
 
       <!-- Progress -->
       <div class="zv-progress"><div class="zv-progress-bar"></div></div>
+
+      <div class="zv-timeline-panel">
+        <div class="zv-timeline-header">Live Execution</div>
+        <div class="zv-timeline-list" id="zv-live-timeline"></div>
+      </div>
 
       <!-- Log Feed -->
       <div class="zv-logs" id="zv-logs" role="log" aria-label="Execution logs" aria-live="polite"></div>
@@ -165,6 +173,10 @@
 <!-- ═══════ SCRIPTS ═══════════════════════════════════════ -->
 <script src="/assets/js/zayvora-pwa.js"></script>
 <script src="./src/runtime/zayvoraRuntime.js"></script>
+<script src="/zayvora/thread-store.js"></script>
+<script src="/zayvora/thread-manager.js"></script>
+<script src="/zayvora/reasoning-engine.js"></script>
+<script src="/zayvora/live-timeline.js"></script>
 <script src="/assets/js/zayvora-app.js"></script>
 
 </body>
