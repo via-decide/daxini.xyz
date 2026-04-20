@@ -146,6 +146,15 @@
   margin: 0 auto;
 }
 
+.workspace-root {
+  min-height: calc(100vh - 60px);
+  width: 100%;
+}
+
+.workspace-container {
+  width: 100%;
+}
+
 .workspace-panel {
   background: #0f172a;
   border: 1px solid #273449;
@@ -306,6 +315,19 @@
   z-index: 20;
 }
 
+.workspace-loading {
+  grid-column: 1 / -1;
+  border: 1px solid #273449;
+  border-radius: 12px;
+  background: #0b1325;
+  color: #9fb5dd;
+  padding: 12px 16px;
+}
+
+.workspace-mounted .workspace-loading {
+  display: none;
+}
+
 .palette-card {
   width: min(360px, 90vw);
   background: #0f172a;
@@ -367,6 +389,10 @@
 
   .workspace-layout {
     grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
   }
 
   .template-panel {
