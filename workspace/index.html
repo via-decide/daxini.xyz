@@ -88,6 +88,31 @@
                 <div id="live-log-mobile" class="live-log-view"></div>
             </section>
 
+
+            <section class="workspace-panel code-intelligence-panel" aria-label="Code intelligence">
+                <h3>Code Intelligence</h3>
+                <div class="repo-input-row">
+                    <input id="code-search-input" type="text" placeholder="Search code (e.g. terrain generation)" aria-label="Search code intelligence library">
+                    <button id="code-search-run" type="button">Search code</button>
+                </div>
+                <div class="prompt-actions">
+                    <button id="code-generate-run" type="button">Generate module</button>
+                    <div class="task-progress">Uses internal codebase retrieval and synthesis.</div>
+                </div>
+                <div class="launcher-grid code-actions">
+                    <button id="artifact-download" class="launcher-action" type="button">Download</button>
+                    <button id="artifact-export" class="launcher-action" type="button">Export</button>
+                    <button id="artifact-publish" class="launcher-action" type="button">Publish</button>
+                </div>
+                <h4>Search results</h4>
+                <div id="code-search-results" class="status-grid"></div>
+                <h4>Pattern matches</h4>
+                <div id="code-pattern-results" class="status-grid"></div>
+                <h4>Generated module</h4>
+                <pre id="code-generate-output" class="result-output">Generated module preview will appear here.</pre>
+                <h4>Workspace artifacts</h4>
+                <div id="generated-code-results" class="status-grid"></div>
+            </section>
             <section class="workspace-panel capability-panel" aria-label="Visible backend capabilities">
                 <h3>Backend capabilities available now</h3>
                 <div id="capability-cards" class="capability-grid"></div>

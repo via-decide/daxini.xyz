@@ -5,6 +5,8 @@ import {
   toolkitVerify,
   toolkitNexResearch
 } from './toolkit-api.js';
+import { runCodeSearch } from '../../zayvora/code-search/search-query.js';
+import { extractPatterns } from '../../zayvora/code-patterns/pattern-extractor.js';
 
 function emit(handlers, type, payload) {
   const handler = handlers?.[type];
@@ -34,9 +36,18 @@ export async function runToolkitTask(query, options = {}) {
     };
   }
 
-  emit(options, 'onLog', '[TOOLKIT] searching corpus');
+  emit(options, 'onLog', '[TOOLKIT] searching corpus + codebase');
   emit(options, 'onStep', 'search');
-  const knowledge = await toolkitSearch(query);
+  const codeMatches = runCodeSearch(query);
+  const codePatterns = extractPatterns(query);
+  const toolkitKnowledge = await toolkitSearch(query);
+  const knowledge = {
+    ...toolkitKnowledge,
+    codebase: {
+      matches: codeMatches,
+      patterns: codePatterns
+    }
+  };
 
   emit(options, 'onLog', '[TOOLKIT] reasoning');
   emit(options, 'onStep', 'reason');
