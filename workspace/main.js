@@ -7,6 +7,7 @@ import {
 } from './components/reasoning-graph.js';
 import { runToolkitTask } from './connectors/zayvora-toolkit.js';
 import { initRepoPanel } from './repo-panel.js';
+import { initCodeIntelligence } from './code-intelligence.js';
 
 const templates = [
   { key: 'research', label: '🔭 Research', prompt: 'Research the current state of AI agent memory architectures and summarize the top 5 approaches.' },
@@ -362,6 +363,7 @@ function initWorkspace() {
   initLiveLog();
   addLog('[ZAYVORA] Mission control ready');
   initRepoPanel({ onLog: addLog });
+  initCodeIntelligence().then(() => addLog('[CODEBASE] Intelligence ready')).catch((error) => addLog(`[CODEBASE] ${error.message}`));
   setupWorkspaceTabs();
   buildTemplates();
   buildWorkspaceLauncher();

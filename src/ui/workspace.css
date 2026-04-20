@@ -617,3 +617,26 @@
     padding: 0 14px;
   }
 }
+
+.code-intelligence-panel {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+#code-search-run,
+#code-generate-run {
+  border: 0;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 700;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+#code-generate-output {
+  white-space: pre-wrap;
+  max-height: 240px;
+  overflow: auto;
+}
