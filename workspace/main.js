@@ -180,6 +180,8 @@ function setupWorkspaceTabs() {
 }
 
 function initWorkspace() {
+  console.log('Workspace mounted');
+  document.body.classList.add('workspace-mounted');
   renderReasoningGraph();
   initLiveLog();
   addLog('[ZAYVORA] Mission control ready');
@@ -192,8 +194,18 @@ function initWorkspace() {
   if (runButton) runButton.addEventListener('click', runTask);
 }
 
+function bootWorkspace() {
+  try {
+    initWorkspace();
+  } catch (error) {
+    console.error('[WORKSPACE] mount failed', error);
+    const loading = document.getElementById('workspace-loading');
+    if (loading) loading.textContent = 'Loading Daxini Workspace... (runtime unavailable)';
+  }
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initWorkspace);
+  document.addEventListener('DOMContentLoaded', bootWorkspace);
 } else {
-  initWorkspace();
+  bootWorkspace();
 }
