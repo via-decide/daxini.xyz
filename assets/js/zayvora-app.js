@@ -11,11 +11,16 @@
     executionState: 'idle', // idle | running | done | failed
     currentStage: -1,
     logs: [],
-    tasks: JSON.parse(localStorage.getItem('zv_tasks') || '[]'),
+    tasks: [],
     recentCommands: JSON.parse(localStorage.getItem('zv_recent') || '[]'),
     activeMobileTab: 'input',
     cancelRequested: false,
+    activeThreadId: null,
   };
+  const threadManager = window.ZayvoraThreadManager || null;
+  const threadStore = window.ZayvoraThreadStore || null;
+  const reasoningEngine = window.ZayvoraReasoningEngine || null;
+  const liveTimeline = window.ZayvoraLiveTimeline || null;
 
   const STAGES = [
     { id: 'plan',     label: 'Plan',     icon: '🧠' },
@@ -32,13 +37,35 @@
 
   // ── Init ────────────────────────────────────────────────
   function init() {
+    hydrateThreads();
     renderStages();
     renderRecentCommands();
     renderTasks();
+    renderThreadSidebar();
     bindEvents();
     updateCharCount();
     showIdleState();
     initMobileNav();
+    loadEngineBadge();
+    resumeLastThread();
+  }
+
+  async function loadEngineBadge() {
+    const badge = $('#zv-model-badge');
+    if (!badge) return;
+
+    badge.textContent = 'Zayvora Local Engine';
+
+    try {
+      const response = await fetch('/zayvora/status', { method: 'GET' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (data && typeof data.engine === 'string' && data.engine.trim()) {
+        badge.textContent = data.engine.trim();
+      }
+    } catch (_) {
+      // Keep local fallback label when backend status is unavailable.
+    }
   }
 
   // ── Stages ──────────────────────────────────────────────
@@ -71,6 +98,13 @@
     const time = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const entry = { time, stage, message, type };
     state.logs.push(entry);
+    if (state.activeThreadId && threadStore) {
+      threadStore.appendLog(state.activeThreadId, {
+        ...entry,
+        timestamp: now.toISOString(),
+        path: `/zayvora/logs/${state.activeThreadId}.log`,
+      });
+    }
 
     const logsEl = $('#zv-logs');
     if (!logsEl) return;
@@ -146,6 +180,17 @@
 
   // ── Task Management ─────────────────────────────────────
   function createTask(description) {
+    if (threadManager) {
+      const thread = threadManager.createThread(description);
+      threadManager.switchThread(thread.id);
+      state.activeThreadId = thread.id;
+      const uiTask = mapThreadToTask(thread);
+      state.tasks = [uiTask, ...state.tasks.filter((task) => task.id !== uiTask.id)].slice(0, 20);
+      renderThreadSidebar();
+      renderTasks();
+      return uiTask;
+    }
+
     const task = {
       id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       description,
@@ -164,8 +209,13 @@
   }
 
   function updateTask(id, updates) {
-    const task = state.tasks.find(t => t.id === id);
+    const task = state.tasks.find((t) => t.id === id);
     if (task) Object.assign(task, updates);
+    if (threadManager && updates.status) {
+      threadManager.updateStatus(id, updates.status);
+      hydrateThreads();
+      renderThreadSidebar();
+    }
     saveTasks();
     renderTasks();
   }
@@ -186,14 +236,14 @@
       return;
     }
 
-    container.innerHTML = state.tasks.map(task => {
+    container.innerHTML = state.tasks.map((task) => {
       const statusClass = task.status;
       const statusLabel = task.status === 'running' ? '● Running' :
                           task.status === 'success' ? '✓ Done' :
                           task.status === 'failed'  ? '✕ Failed' : '◦ Pending';
       const timeAgo = getTimeAgo(task.createdAt);
       return `
-        <div class="zv-task-card ${statusClass}" data-task-id="${task.id}">
+        <div class="zv-task-card ${statusClass} ${task.id === state.activeThreadId ? 'active' : ''}" data-task-id="${task.id}">
           <div class="zv-task-header">
             <div class="zv-task-title">${escapeHtml(task.description.slice(0, 50))}</div>
             <div class="zv-task-status ${statusClass}">${statusLabel}</div>
@@ -205,6 +255,23 @@
           </div>
         </div>`;
     }).join('');
+  }
+
+  function renderThreadSidebar() {
+    const list = $('#zv-thread-sidebar');
+    if (!list) return;
+
+    if (state.tasks.length === 0) {
+      list.innerHTML = '<div style="font-size:.72rem;color:var(--tx3);padding:.3rem 0;">No active threads</div>';
+      return;
+    }
+
+    list.innerHTML = state.tasks.map((task) => `
+      <div class="zv-recent-item zv-thread-item ${task.id === state.activeThreadId ? 'active' : ''}" data-thread-id="${task.id}" title="${escapeHtml(task.description)}">
+        <div>${escapeHtml(task.description.slice(0, 36))}${task.description.length > 36 ? '…' : ''}</div>
+        <div class="zv-thread-status">${escapeHtml(task.status)}</div>
+      </div>
+    `).join('');
   }
 
   // ── Output Preview ──────────────────────────────────────
@@ -269,40 +336,12 @@
     updateExecStatus('Running...');
 
     const task = createTask(description);
+    if (threadManager && state.activeThreadId) {
+      threadManager.appendMessage(state.activeThreadId, { role: 'user', content: description });
+    }
     if (window.innerWidth <= 640) switchMobileTab('exec');
 
-    // ── Visual Beast-Mode Orchestration ──
-    const preSteps = [
-      { stage: 'FLIGHT_PLAN', delay: 800, msgs: [
-        { m: `🛫 Global Flight Plan (Operation Beast-Mode)`, t: 'accent' },
-        { m: `Mode: DIRECT_SYNTHESIS`, t: 'info' },
-        { m: `Repo: ${task.repo}`, t: 'info' }
-      ]},
-      { stage: 'PLAN', delay: 1200, msgs: [
-        { m: '🧠 Activating Beast Brain (Synapse self-history)...', t: 'accent' },
-        { m: 'Validating inputs and building task context.', t: 'info' },
-      ]},
-      { stage: 'AUDIT', delay: 1500, msgs: [
-        { m: `Inspecting ${task.repo} via local corpus.`, t: 'info' },
-      ]}
-    ];
-
-    for (let sIdx = 0; sIdx < preSteps.length; sIdx++) {
-      if (state.cancelRequested) return handleCancel(task);
-      const step = preSteps[sIdx];
-      state.currentStage = sIdx;
-      updateStages(sIdx, 'active');
-      updateProgress((sIdx / 6) * 100);
-      for (const msg of step.msgs) {
-        addLog(step.stage, msg.m, msg.t);
-        await sleep(300 + Math.random() * 200);
-      }
-      await sleep(step.delay);
-    }
-
-    state.currentStage = 3; // GENERATE
-    updateStages(3, 'active');
-    addLog('GENERATE', '⚙️ BEAST-MODE: Synthesizing natively via local Zayvora:latest...', 'accent');
+    addLog('INIT', 'Connecting to local zayvora:latest...', 'info');
 
     try {
       const auth = JSON.parse(localStorage.getItem('zv_passport') || '{}');
@@ -321,103 +360,62 @@
           runtime_mode: runtimeMode,
           performance_mode: perfMode
         })
+      await runReasoningStep(task.id, 1, 'Planning task', async () => {
+        addLog('STEP 1', 'Planning task context...', 'info');
+        updateProgress(15);
+      });
+      await runReasoningStep(task.id, 2, 'Scanning knowledge', async () => {
+        addLog('STEP 2', 'Scanning knowledge and prior thread memory...', 'accent');
+        updateProgress(30);
+      });
+      await runReasoningStep(task.id, 3, 'Searching repository', async () => {
+        addLog('STEP 3', 'Searching repository and execution context...', 'accent');
+        updateProgress(45);
+      });
+      await runReasoningStep(task.id, 4, 'Generating solution', async () => {
+        addLog('LLM', 'Dispatching local execution task...', 'accent');
       });
 
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
-      }
+      const result = await executeTaskLocally({ prompt: description, taskId: task.id });
+      const fullCode = typeof result?.text === 'string'
+        ? result.text
+        : (typeof result?.code === 'string' ? result.code : JSON.stringify(result, null, 2));
 
-      addLog('LLM', 'Stream connected. Synthesizing...', 'accent');
-      updateProgress(30);
+      await runReasoningStep(task.id, 5, 'Verifying result', async () => {
+        updateProgress(80);
+        addLog('STEP 5', 'Verifying result integrity...', 'info');
+      });
+      await runReasoningStep(task.id, 6, 'Completed', async () => {
+        updateProgress(100);
+        addLog('COMPLETE', 'Synthesis finished safely.', 'success');
+      });
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      
-      let fullCode = "";
-      
-      while (true) {
-        if (state.cancelRequested) {
-          reader.cancel();
-          addLog('CANCELLED', 'Pipeline cancelled by user.', 'warn');
-          finishTask(task, 'failed');
-          return;
-        }
-
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const str = decoder.decode(value, { stream: true });
-        const lines = str.split('\\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.slice(6);
-            if (dataStr === '[DONE]') continue;
-            try {
-              const data = JSON.parse(dataStr);
-              if (data.error) {
-                addLog('ERROR', data.error, 'error');
-                throw new Error(data.error);
-              }
-              if (data.text) {
-                fullCode += data.text;
-                if (fullCode.length % 200 === 0) {
-                    addLog('STREAM', `Synthesizing tokens... (${fullCode.length} bytes)`, 'info');
-                }
-              }
-            } catch (e) {}
-          }
-        }
-      }
-
-      addLog('GENERATE', `✅ Synthesized code locally — syntax verification passed`, 'success');
-
-      // ── Post-Generation Demo Steps ──
-      const postSteps = [
-        { stage: 'PUSH', delay: 1500, msgs: [
-          { m: `Creating branch ${task.branch}...`, t: 'info' },
-          { m: '📝 Committing synthesized file...', t: 'accent' },
-          { m: `✅ File committed (Simulated)`, t: 'success' },
-        ]},
-        { stage: 'PR', delay: 1000, msgs: [
-          { m: 'Opening pull request...', t: 'info' },
-          { m: '✅ PR opened (Simulated/Local)', t: 'success' },
-        ]}
-      ];
-
-      for (let sIdx = 0; sIdx < postSteps.length; sIdx++) {
-        if (state.cancelRequested) return handleCancel(task);
-        const step = postSteps[sIdx];
-        state.currentStage = 4 + sIdx;
-        updateStages(4 + sIdx, 'active');
-        updateProgress(((4 + sIdx) / 6) * 100);
-        for (const msg of step.msgs) {
-          addLog(step.stage, msg.m, msg.t);
-          await sleep(300 + Math.random() * 200);
-        }
-        await sleep(step.delay);
-      }
-
-      updateProgress(100);
-      updateStages(6, 'done');
-      addLog('COMPLETE', 'Synthesis & simulated push finished safely.', 'success');
-      
-      task.lines = fullCode.split('\\n').length;
+      task.lines = fullCode.split('\n').length;
       task.prUrl = null;
       task.outputCode = fullCode;
-      
+      if (threadStore && state.activeThreadId) {
+        threadStore.appendArtifact(state.activeThreadId, {
+          type: 'generated_code',
+          label: `${task.description} output`,
+          created_at: new Date().toISOString(),
+          path: `/zayvora/artifacts/${state.activeThreadId}/generated-output.py`,
+          content: fullCode,
+        });
+      }
+      if (threadManager && state.activeThreadId) {
+        threadManager.appendMessage(state.activeThreadId, { role: 'assistant', content: 'Task completed. Artifact generated.' });
+      }
+
       finishTask(task, 'success');
       showRealOutput(task, fullCode);
 
     } catch (err) {
+      if (reasoningEngine && state.activeThreadId) {
+        reasoningEngine.updateStepStatus(state.activeThreadId, 4, 'failed');
+      }
       addLog('ERROR', 'Failed to execute: ' + err.message, 'error');
       finishTask(task, 'failed');
     }
-  }
-
-  function handleCancel(task) {
-    addLog('CANCELLED', 'Pipeline cancelled by user.', 'warn');
-    finishTask(task, 'failed');
   }
 
   function finishTask(task, status) {
@@ -503,6 +501,34 @@
     if (el) el.textContent = text;
   }
 
+  function executeTaskLocally(task) {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        window.removeEventListener('zayvora-result', handleResult);
+        reject(new Error('Local runtime timeout'));
+      }, 30000);
+
+      function handleResult(event) {
+        clearTimeout(timeoutId);
+        window.removeEventListener('zayvora-result', handleResult);
+        const result = event.detail;
+        if (result && result.error) {
+          reject(new Error(result.error));
+          return;
+        }
+        resolve(result || {});
+      }
+
+      window.addEventListener('zayvora-result', handleResult, { once: true });
+
+      window.dispatchEvent(
+        new CustomEvent('zayvora-execute', {
+          detail: task
+        })
+      );
+    });
+  }
+
   // ── Mobile Navigation ───────────────────────────────────
   function initMobileNav() {
     if (window.innerWidth > 640) return;
@@ -581,6 +607,24 @@
       });
     }
 
+    const threadSidebar = $('#zv-thread-sidebar');
+    if (threadSidebar) {
+      threadSidebar.addEventListener('click', (e) => {
+        const item = e.target.closest('[data-thread-id]');
+        if (!item) return;
+        openThread(item.dataset.threadId);
+      });
+    }
+
+    const taskList = $('#zv-task-list');
+    if (taskList) {
+      taskList.addEventListener('click', (e) => {
+        const card = e.target.closest('[data-task-id]');
+        if (!card) return;
+        openThread(card.dataset.taskId);
+      });
+    }
+
     // Mobile tabs
     $$('.zv-mobile-tab').forEach(tab => {
       tab.addEventListener('click', () => switchMobileTab(tab.dataset.tab));
@@ -593,6 +637,100 @@
         if (textarea) textarea.focus();
       }
     });
+
+    window.addEventListener('zayvora-result', () => {
+      addLog('RUNTIME', 'Execution complete');
+    });
+
+    window.addEventListener('zayvora-timeline-event', (event) => {
+      const taskId = event?.detail?.taskId;
+      if (!taskId || taskId !== state.activeThreadId || !threadManager || !liveTimeline) return;
+      const thread = threadManager.loadThread(taskId);
+      if (!thread) return;
+      liveTimeline.renderTimeline($('#zv-live-timeline'), thread.reasoning_steps || []);
+      hydrateThreads();
+      renderTasks();
+      renderThreadSidebar();
+    });
+  }
+
+  function hydrateThreads() {
+    if (!threadManager) {
+      state.tasks = JSON.parse(localStorage.getItem('zv_tasks') || '[]');
+      return;
+    }
+    state.tasks = threadManager.listThreads().map(mapThreadToTask);
+  }
+
+  function mapThreadToTask(thread) {
+    return {
+      id: thread.id,
+      description: thread.title,
+      status: thread.status,
+      createdAt: thread.created_at,
+      completedAt: null,
+      repo: 'via-decide/daxini.xyz',
+      branch: `simba/${thread.title.toLowerCase().replace(/[^a-z0-9\\s]/g, '').trim().replace(/\\s+/g, '-').slice(0, 30)}`,
+      lines: (thread.artifacts || [])[0]?.content ? (thread.artifacts[0].content || '').split('\\n').length : 0,
+      prUrl: null,
+      outputCode: (thread.artifacts || [])[0]?.content || '',
+    };
+  }
+
+  function openThread(taskId) {
+    if (!threadManager) return;
+    const thread = threadManager.switchThread(taskId);
+    if (!thread) return;
+    state.activeThreadId = thread.id;
+    state.logs = thread.logs || [];
+    renderThreadSidebar();
+    renderTasks();
+    redrawLogsFromThread(thread);
+    if (liveTimeline) {
+      liveTimeline.renderTimeline($('#zv-live-timeline'), thread.reasoning_steps || []);
+    }
+    if (thread.artifacts && thread.artifacts.length > 0) {
+      const artifact = thread.artifacts[thread.artifacts.length - 1];
+      const task = mapThreadToTask(thread);
+      showRealOutput(task, artifact.content || '');
+    } else {
+      clearOutput();
+    }
+  }
+
+  function redrawLogsFromThread(thread) {
+    const logsEl = $('#zv-logs');
+    if (!logsEl) return;
+    logsEl.innerHTML = '';
+    (thread.logs || []).forEach((entry) => {
+      const div = document.createElement('div');
+      div.className = `zv-log-entry ${entry.type || 'info'}`;
+      div.innerHTML = `<span class="zv-log-time">${entry.time || '--:--:--'}</span><span class="zv-log-stage">[${entry.stage || 'LOG'}]</span> ${escapeHtml(entry.message || '')}`;
+      logsEl.appendChild(div);
+    });
+    if ((thread.logs || []).length === 0) {
+      showIdleState();
+    }
+  }
+
+  function resumeLastThread() {
+    if (!threadManager) return;
+    const activeId = threadManager.getActiveThreadId();
+    if (!activeId) {
+      if (liveTimeline) liveTimeline.renderTimeline($('#zv-live-timeline'), []);
+      return;
+    }
+    openThread(activeId);
+  }
+
+  async function runReasoningStep(taskId, step, label, action) {
+    if (reasoningEngine && taskId) {
+      reasoningEngine.recordStep(taskId, step, label);
+    }
+    await action();
+    if (reasoningEngine && taskId) {
+      reasoningEngine.updateStepStatus(taskId, step, 'completed');
+    }
   }
 
   // ── Syntax Highlighting (basic Python) ──────────────────

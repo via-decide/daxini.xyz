@@ -345,6 +345,69 @@ html, body {
   flex-shrink: 0;
 }
 
+.chat-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.connection-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--error);
+}
+
+.connection-pill.connected .connection-dot { background: var(--success); }
+.connection-pill.connecting .connection-dot {
+  background: var(--warning);
+  animation: pulse-glow 1.4s infinite;
+}
+
+.connection-banner {
+  margin: 10px 20px 0;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.08);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.82rem;
+}
+
+.connection-banner.hidden { display: none; }
+.connection-banner-title { font-weight: 600; margin-bottom: 6px; color: var(--warning); }
+.connection-banner ul { margin-left: 16px; color: var(--text-muted); }
+.connection-banner li { margin: 4px 0; }
+.connection-banner-actions { margin-top: 8px; display: flex; gap: 8px; }
+.connection-banner-actions button {
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: var(--radius-xs);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.connection-banner-actions button:hover { border-color: var(--primary); }
+.connection-help-note {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .chat-header-title {
   font-size: 0.9rem;
   font-weight: 500;
@@ -841,12 +904,30 @@ html, body {
   .chat-view { flex-direction: column; }
 
   .chat-messages { padding: 16px; }
+  .connection-banner { margin: 8px 12px 0; font-size: 0.78rem; }
+  .connection-pill { padding: 4px 8px; font-size: 0.7rem; }
+  .chat-header { padding: 0 12px; }
+  .chat-header-title {
+    max-width: 36vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
   .chat-input-area { padding: 10px 12px 10px; }
 
   .message { max-width: 100%; }
 
   .settings-body { max-width: 100%; }
+  .settings-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .settings-row select, .settings-row input[type="text"], .settings-row .btn-danger, .settings-row span {
+    width: 100%;
+    text-align: left;
+  }
 }
 
 /* ═══════════════════════════════════════════
@@ -947,9 +1028,11 @@ html, body {
         <input type="email" id="signup-email" placeholder="you@example.com" required autocomplete="email">
         <label for="signup-password">Password</label>
         <input type="password" id="signup-password" placeholder="Min 8 characters" required minlength="8" autocomplete="new-password">
+        <label for="signup-password-confirm">Confirm Password</label>
+        <input type="password" id="signup-password-confirm" placeholder="Confirm password" required minlength="8" autocomplete="new-password">
         <div class="auth-error" id="signup-error"></div>
         <div class="auth-success hidden" id="signup-success">
-          <p>Account created. Save your recovery codes:</p>
+          <p>Account created. Save your recovery code:</p>
           <div class="recovery-codes" id="signup-recovery-codes"></div>
           <p style="margin-top:8px;color:var(--text-muted);font-size:0.8rem">Write these down. They cannot be shown again.</p>
         </div>
@@ -1010,7 +1093,27 @@ html, body {
       <div class="chat-header">
         <button class="btn-hamburger" id="btn-hamburger" aria-label="Open sidebar">&#9776;</button>
         <span class="chat-header-title" id="chat-header-title">New Conversation</span>
-        <div></div>
+        <div class="chat-header-right">
+          <div class="connection-pill disconnected" id="connection-pill" role="status" aria-live="polite">
+            <span class="connection-dot" aria-hidden="true"></span>
+            <span id="connection-pill-text">Disconnected</span>
+          </div>
+        </div>
+      </div>
+      <div class="connection-banner hidden" id="connection-banner" aria-live="polite">
+        <div class="connection-banner-title">⚠️ Zayvora backend unavailable</div>
+        <ul>
+          <li>Is Zayvora running? (<span id="connection-endpoint-label">localhost:11434</span>)</li>
+          <li>Your message will be queued and sent when connection restores.</li>
+          <li id="retry-next-attempt">Retrying... (Next attempt in 5s)</li>
+        </ul>
+        <div class="connection-banner-actions">
+          <button id="btn-connection-retry" type="button">Retry Now</button>
+          <button id="btn-manual-instructions" type="button">Connection Help</button>
+        </div>
+        <div class="connection-help-note hidden" id="connection-help-note">
+          Open <strong>Settings → Inference</strong> to verify your endpoint and model. Messages remain queued until reconnection.
+        </div>
       </div>
       <div class="chat-messages" id="chat-messages" role="log" aria-live="polite">
         <div class="typing-indicator" id="typing-indicator">
@@ -1064,7 +1167,7 @@ html, body {
         <h3>Inference</h3>
         <div class="settings-row">
           <label for="setting-endpoint">Zayvora Endpoint</label>
-          <input type="text" id="setting-endpoint" placeholder="http://localhost:11434">
+          <input type="text" id="setting-endpoint" placeholder="Local service URL">
         </div>
         <div class="settings-row">
           <label for="setting-model">Model</label>
@@ -1073,6 +1176,10 @@ html, body {
       </div>
       <div class="settings-section">
         <h3>Account</h3>
+        <div class="settings-row">
+          <label>Install app</label>
+          <button class="btn-danger" id="btn-install-pwa" style="border-color:var(--success);color:var(--success)" disabled>Install Unavailable</button>
+        </div>
         <div class="settings-row">
           <label>Logged in as</label>
           <span id="settings-email" style="color:var(--text-muted);font-size:0.85rem">—</span>
@@ -1186,8 +1293,8 @@ html, body {
 (function() {
 
 /* ─── IndexedDB Storage Layer ─── */
-const DB_NAME = 'zayvora_db';
-const DB_VERSION = 1;
+const DB_NAME = 'zayvora-auth';
+const DB_VERSION = 3;
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -1195,17 +1302,32 @@ function openDB() {
     req.onupgradeneeded = (e) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains('users')) {
-        db.createObjectStore('users', { keyPath: 'email' });
+        const userStore = db.createObjectStore('users', { keyPath: 'email' });
+        userStore.createIndex('email', 'email', { unique: true });
+      } else {
+        const userStore = req.transaction.objectStore('users');
+        if (!userStore.indexNames.contains('email')) {
+          userStore.createIndex('email', 'email', { unique: true });
+        }
       }
       if (!db.objectStoreNames.contains('conversations')) {
         const convStore = db.createObjectStore('conversations', { keyPath: 'id' });
         convStore.createIndex('timestamp', 'timestamp', { unique: false });
       }
-      if (!db.objectStoreNames.contains('tokens')) {
-        db.createObjectStore('tokens', { keyPath: 'key' });
+      if (db.objectStoreNames.contains('tokens')) {
+        db.deleteObjectStore('tokens');
+      }
+      const tokenStore = db.createObjectStore('tokens', { keyPath: 'id' });
+      tokenStore.createIndex('email', 'email', { unique: false });
+      if (!db.objectStoreNames.contains('sessions')) {
+        db.createObjectStore('sessions', { keyPath: 'id' });
       }
       if (!db.objectStoreNames.contains('preferences')) {
         db.createObjectStore('preferences', { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains('pendingMessages')) {
+        const pendingStore = db.createObjectStore('pendingMessages', { keyPath: 'id' });
+        pendingStore.createIndex('timestamp', 'timestamp', { unique: false });
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -1263,7 +1385,7 @@ async function dbClear(storeName) {
   });
 }
 
-/* ─── Crypto Utilities (local, no external deps) ─── */
+/* ─── Auth Utilities (local-only, no external deps) ─── */
 
 async function deriveKey(password, saltHex) {
   const encoder = new TextEncoder();
@@ -1299,67 +1421,41 @@ async function decryptData(encryptedObj, key) {
   return JSON.parse(new TextDecoder().decode(decrypted));
 }
 
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
-  const derived = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-    keyMaterial,
-    256
-  );
-  const hashArray = Array.from(new Uint8Array(derived));
-  const saltArray = Array.from(salt);
-  return saltArray.map(b => b.toString(16).padStart(2, '0')).join('') + ':' +
-         hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function verifyPassword(password, stored) {
-  const [saltHex, hashHex] = stored.split(':');
-  const salt = new Uint8Array(saltHex.match(/.{2}/g).map(b => parseInt(b, 16)));
-  const encoder = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
-  const derived = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-    keyMaterial,
-    256
-  );
-  const hashArray = Array.from(new Uint8Array(derived));
-  const computedHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return computedHex === hashHex;
-}
-
-function generateRecoveryCodes(count) {
-  const codes = [];
-  for (let i = 0; i < count; i++) {
-    const bytes = crypto.getRandomValues(new Uint8Array(4));
-    codes.push(Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase());
+function hashPassword(password) {
+  let hash = 0;
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
   }
-  return codes;
+  return Math.abs(hash).toString(36);
+}
+
+function verifyPassword(password, storedHash) {
+  return hashPassword(password) === storedHash;
+}
+
+function generateRecoveryCode() {
+  return Math.random().toString(36).substring(2, 10).toUpperCase();
 }
 
 function generateToken(email) {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const now = Math.floor(Date.now() / 1000);
-  const payload = btoa(JSON.stringify({
-    sub: email,
-    iat: now,
-    exp: now + 86400,
-    iss: 'zayvora-pwa',
-    jti: crypto.randomUUID()
-  }));
-  const sig = btoa(String(Date.now()));
+  const payload = btoa(JSON.stringify({ email, iat: now, exp: now + 86400 }));
+  const sig = btoa(email + 'secret-key');
   return header + '.' + payload + '.' + sig;
 }
 
-function decodeToken(token) {
+function verifyToken(token) {
   try {
     const parts = token.split('.');
-    if (parts.length !== 3) return null;
+    if (parts.length !== 3) return false;
     const payload = JSON.parse(atob(parts[1]));
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
-    return payload;
-  } catch { return null; }
+    return payload.exp > Math.floor(Date.now() / 1000);
+  } catch {
+    return false;
+  }
 }
 
 function getDeviceFingerprint() {
@@ -1381,10 +1477,18 @@ const state = {
   currentConversationId: null,
   conversations: [],
   isStreaming: false,
+  deferredInstallPrompt: null,
   abortController: null,
   inactivityTimer: null,
+  connection: {
+    status: 'connecting',
+    nextRetryAt: null,
+    checkInterval: null,
+    countdownInterval: null,
+    lastChecked: null
+  },
   settings: {
-    endpoint: 'http://localhost:11434',
+    endpoint: '',
     model: 'zayvora-engineer'
   }
 };
@@ -1392,6 +1496,149 @@ const state = {
 /* ─── DOM References ─── */
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function updateInstallButton() {
+  const btn = $('#btn-install-pwa');
+  if (!btn) return;
+  if (isStandaloneMode()) {
+    btn.textContent = 'Installed';
+    btn.disabled = true;
+    return;
+  }
+  btn.textContent = state.deferredInstallPrompt ? 'Install App' : 'Install Unavailable';
+  btn.disabled = !state.deferredInstallPrompt;
+}
+
+function getConfiguredEndpoint() {
+  return (state.settings.endpoint || '').trim() || 'http://localhost:11434';
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function fetchWithRetry(url, options = {}, maxRetries = 3, timeoutMs = 5000) {
+  let lastError = null;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetchWithTimeout(url, options, timeoutMs);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response;
+    } catch (error) {
+      lastError = error;
+      if (i < maxRetries - 1) await sleep(Math.pow(2, i) * 1000);
+    }
+  }
+  throw lastError;
+}
+
+function setConnectionStatus(status) {
+  state.connection.status = status;
+  state.connection.lastChecked = Date.now();
+
+  const pill = $('#connection-pill');
+  const pillText = $('#connection-pill-text');
+  const banner = $('#connection-banner');
+  if (!pill || !pillText || !banner) return;
+
+  pill.classList.remove('connected', 'connecting', 'disconnected');
+  pill.classList.add(status);
+
+  if (status === 'connected') {
+    pillText.textContent = 'Connected';
+    banner.classList.add('hidden');
+  } else if (status === 'connecting') {
+    pillText.textContent = 'Reconnecting...';
+    banner.classList.remove('hidden');
+  } else {
+    pillText.textContent = 'Disconnected';
+    banner.classList.remove('hidden');
+  }
+}
+
+function updateRetryCountdown() {
+  const label = $('#retry-next-attempt');
+  if (!label) return;
+  if (!state.connection.nextRetryAt) {
+    label.textContent = 'Retrying... (Next attempt in 5s)';
+    return;
+  }
+  const remainingMs = Math.max(0, state.connection.nextRetryAt - Date.now());
+  const seconds = Math.ceil(remainingMs / 1000);
+  label.textContent = `Retrying... (Next attempt in ${seconds}s)`;
+}
+
+async function checkConnection(silent = false) {
+  if (!silent) setConnectionStatus('connecting');
+  const endpoint = getConfiguredEndpoint().replace(/\/$/, '');
+  const hostLabel = endpoint.replace(/^https?:\/\//, '') || 'localhost:11434';
+  const endpointLabel = $('#connection-endpoint-label');
+  if (endpointLabel) endpointLabel.textContent = hostLabel;
+
+  try {
+    await fetchWithRetry(`${endpoint}/health`, { method: 'GET' }, 2, 3000);
+    const wasDisconnected = state.connection.status !== 'connected';
+    setConnectionStatus('connected');
+    if (wasDisconnected) await flushQueuedMessages();
+    return true;
+  } catch {
+    setConnectionStatus('disconnected');
+    state.connection.nextRetryAt = Date.now() + 5000;
+    updateRetryCountdown();
+    return false;
+  }
+}
+
+function startConnectionMonitor() {
+  stopConnectionMonitor();
+  state.connection.checkInterval = setInterval(() => {
+    checkConnection();
+  }, 5000);
+  state.connection.countdownInterval = setInterval(updateRetryCountdown, 1000);
+}
+
+function stopConnectionMonitor() {
+  clearInterval(state.connection.checkInterval);
+  clearInterval(state.connection.countdownInterval);
+  state.connection.checkInterval = null;
+  state.connection.countdownInterval = null;
+}
+
+async function queuePendingMessage(conversationId, text) {
+  await dbPut('pendingMessages', {
+    id: generateId(),
+    conversationId,
+    text,
+    timestamp: Date.now(),
+    status: 'pending'
+  });
+}
+
+async function flushQueuedMessages() {
+  const pending = await dbGetAll('pendingMessages');
+  for (const item of pending.sort((a, b) => a.timestamp - b.timestamp)) {
+    try {
+      await streamResponseByConversationId(item.conversationId, item.text, true);
+      await dbDelete('pendingMessages', item.id);
+    } catch {
+      break;
+    }
+  }
+}
 
 /* ─── View Navigation ─── */
 function showView(viewId) {
@@ -1418,25 +1665,32 @@ $('#login-form').addEventListener('submit', async (e) => {
   errEl.textContent = '';
 
   const user = await dbGet('users', email);
-  if (!user) { errEl.textContent = 'No account found with that email.'; return; }
-
-  const valid = await verifyPassword(password, user.passwordHash);
-  if (!valid) { errEl.textContent = 'Incorrect password.'; return; }
+  if (!user || !verifyPassword(password, user.passwordHash)) {
+    errEl.textContent = 'Invalid email or password';
+    return;
+  }
 
   const token = generateToken(email);
+  const now = Date.now();
+  await dbClear('tokens');
   await dbPut('tokens', {
-    key: 'session',
+    id: 'session',
     token,
     email,
-    fingerprint: getDeviceFingerprint(),
-    created: Date.now()
+    expiresAt: now + (24 * 60 * 60 * 1000),
+    deviceFingerprint: getDeviceFingerprint()
+  });
+  await dbPut('sessions', {
+    id: 'current',
+    email,
+    loginTime: now,
+    lastActivityTime: now
   });
   sessionStorage.setItem('zayvora_token', token);
+  sessionStorage.setItem('zayvora_email', email);
 
   state.currentUser = user;
-  // Derive encryption key from password
-  const saltHex = user.passwordHash.split(':')[0];
-  state.encryptionKey = await deriveKey(password, saltHex);
+  state.encryptionKey = await deriveKey(password, hashPassword(password));
 
   await enterApp();
 });
@@ -1447,6 +1701,7 @@ $('#signup-form').addEventListener('submit', async (e) => {
   const name = $('#signup-name').value.trim();
   const email = $('#signup-email').value.trim();
   const password = $('#signup-password').value;
+  const confirmPassword = $('#signup-password-confirm').value;
   const errEl = $('#signup-error');
   const successEl = $('#signup-success');
   errEl.textContent = '';
@@ -1454,32 +1709,32 @@ $('#signup-form').addEventListener('submit', async (e) => {
 
   const existing = await dbGet('users', email);
   if (existing) { errEl.textContent = 'Account already exists.'; return; }
+  if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; return; }
+  if (password !== confirmPassword) { errEl.textContent = 'Passwords do not match.'; return; }
 
-  const passwordHash = await hashPassword(password);
-  const recoveryCodes = generateRecoveryCodes(5);
+  const passwordHash = hashPassword(password);
+  const recoveryCode = generateRecoveryCode();
 
   await dbPut('users', {
     email,
     name,
     passwordHash,
-    recoveryCodes: recoveryCodes.map(c => c.toUpperCase()),
+    recoveryCode,
     createdAt: Date.now()
   });
 
-  // Show recovery codes
-  $('#signup-recovery-codes').textContent = recoveryCodes.join('  ');
+  $('#signup-recovery-codes').textContent = recoveryCode;
   successEl.classList.remove('hidden');
-  $('#signup-btn').textContent = 'Continue to Sign In';
-  $('#signup-btn').type = 'button';
-  $('#signup-btn').onclick = () => {
-    // Reset
-    $('#signup-btn').textContent = 'Create Account';
-    $('#signup-btn').type = 'submit';
-    $('#signup-btn').onclick = null;
-    successEl.classList.add('hidden');
-    $('#signup-form').reset();
-    showView('login');
-  };
+  await sleep(1400);
+  const loginResult = await (async () => {
+    const userRecord = await dbGet('users', email);
+    if (!userRecord || !verifyPassword(password, userRecord.passwordHash)) return false;
+    return true;
+  })();
+  if (!loginResult) { errEl.textContent = 'Auto-login failed. Please sign in manually.'; return; }
+  $('#login-email').value = email;
+  $('#login-password').value = password;
+  document.getElementById('login-form').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
 });
 
 /* ─── Auth: Recovery ─── */
@@ -1494,21 +1749,14 @@ $('#recovery-form').addEventListener('submit', async (e) => {
   const user = await dbGet('users', email);
   if (!user) { errEl.textContent = 'No account found.'; return; }
 
-  if (!user.recoveryCodes || user.recoveryCodes.length === 0) {
-    errEl.textContent = 'No recovery codes remaining for this account.';
-    return;
-  }
-
-  const usedIndex = user.recoveryCodes.indexOf(code);
-
-  if (usedIndex === -1) { errEl.textContent = 'Invalid recovery code.'; return; }
-
-  user.passwordHash = await hashPassword(newPass);
-  user.recoveryCodes.splice(usedIndex, 1); // consume the used code
+  if (newPass.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; return; }
+  if (user.recoveryCode !== code) { errEl.textContent = 'Invalid recovery code.'; return; }
+  user.passwordHash = hashPassword(newPass);
+  user.recoveryCode = generateRecoveryCode();
   await dbPut('users', user);
 
   errEl.textContent = '';
-  alert('Password reset successful. You can now sign in.');
+  alert('Password reset successful. Save this new recovery code: ' + user.recoveryCode);
   showView('login');
 });
 
@@ -1520,38 +1768,41 @@ $('#goto-login-from-recovery').addEventListener('click', () => showView('login')
 
 /* ─── Auth: Auto-login check ─── */
 async function checkExistingSession() {
+  const token = sessionStorage.getItem('zayvora_token');
+  const email = sessionStorage.getItem('zayvora_email');
+  if (!token || !email || !verifyToken(token)) {
+    sessionStorage.removeItem('zayvora_token');
+    sessionStorage.removeItem('zayvora_email');
+    return false;
+  }
+
   const stored = await dbGet('tokens', 'session');
-  if (!stored) return false;
-
-  const decoded = decodeToken(stored.token);
-  if (!decoded) {
-    await dbDelete('tokens', 'session');
+  if (!stored || stored.token !== token || stored.email !== email) {
     return false;
   }
 
-  if (stored.fingerprint !== getDeviceFingerprint()) {
-    await dbDelete('tokens', 'session');
+  if (stored.deviceFingerprint !== getDeviceFingerprint()) {
     return false;
   }
 
-  const user = await dbGet('users', stored.email);
+  const user = await dbGet('users', email);
   if (!user) {
-    await dbDelete('tokens', 'session');
     return false;
   }
 
   state.currentUser = user;
-  sessionStorage.setItem('zayvora_token', stored.token);
   return true;
 }
 
 /* ─── Auth: Logout ─── */
 async function logout() {
-  await dbDelete('tokens', 'session');
-  sessionStorage.removeItem('zayvora_token');
+  await dbClear('tokens');
+  await dbClear('sessions');
+  sessionStorage.clear();
   state.currentUser = null;
   state.currentConversationId = null;
   clearInactivityTimer();
+  stopConnectionMonitor();
   showView('login');
 }
 
@@ -1575,15 +1826,17 @@ function clearInactivityTimer() {
 async function enterApp() {
   showView('chat');
   resetInactivityTimer();
+  setConnectionStatus('connecting');
 
   // Load settings
   const prefs = await dbGet('preferences', 'settings');
   if (prefs) {
     state.settings = { ...state.settings, ...prefs.value };
   }
-  $('#setting-endpoint').value = state.settings.endpoint;
+  $('#setting-endpoint').value = state.settings.endpoint === 'http://localhost:11434' ? '' : state.settings.endpoint;
   $('#setting-model').value = state.settings.model;
   $('#settings-email').textContent = state.currentUser.email;
+  updateInstallButton();
 
   // Load conversations
   await loadConversations();
@@ -1594,6 +1847,9 @@ async function enterApp() {
   } else {
     selectConversation(state.conversations[0].id);
   }
+
+  startConnectionMonitor();
+  checkConnection();
 }
 
 /* ─── Conversation Management ─── */
@@ -1877,7 +2133,35 @@ async function sendMessage() {
   }
 
   // Start streaming response
+  if (state.connection.status !== 'connected') {
+    await queuePendingMessage(conv.id, text);
+    conv.messages.push({
+      role: 'assistant',
+      content: '⚠️ Connection unavailable\n\n• We can’t reach your local AI service right now.\n• Your message has been queued and will auto-send when connection restores.\n• Retrying every 5 seconds.',
+      content: '⚠️ Zayvora backend unavailable\n\n• Is your local Zayvora service running?\n• Your message has been queued and will auto-send when connection restores.\n• Retrying every 5 seconds.',
+      content: '⚠️ Zayvora backend unavailable\n\n• Is Zayvora running? (' + state.settings.endpoint + ')\n• Your message has been queued and will auto-send when connection restores.\n• Retrying every 5 seconds.',
+      timestamp: Date.now()
+    });
+    await dbPut('conversations', conv);
+    renderMessages();
+    await checkConnection();
+    return;
+  }
+
   await streamResponse(conv, text);
+}
+
+async function streamResponseByConversationId(conversationId, prompt, isQueueFlush) {
+  const conv = state.conversations.find(c => c.id === conversationId);
+  if (!conv) return;
+  if (isQueueFlush) {
+    conv.messages.push({ role: 'user', content: prompt, timestamp: Date.now() });
+    conv.timestamp = Date.now();
+    await dbPut('conversations', conv);
+    renderMessages();
+    renderConversationList();
+  }
+  return streamResponse(conv, prompt);
 }
 
 async function streamResponse(conv, prompt) {
@@ -1893,7 +2177,7 @@ async function streamResponse(conv, prompt) {
   let fullResponse = '';
 
   try {
-    const endpoint = state.settings.endpoint;
+    const endpoint = getConfiguredEndpoint();
     const model = state.settings.model;
 
     // Build message history for context
@@ -1950,7 +2234,12 @@ async function streamResponse(conv, prompt) {
     if (err.name === 'AbortError') {
       fullResponse += '\n\n[Generation stopped]';
     } else {
-      fullResponse = fullResponse || `[Connection error: ${err.message}. Check that Zayvora is running at ${state.settings.endpoint}]`;
+      setConnectionStatus('disconnected');
+      state.connection.nextRetryAt = Date.now() + 5000;
+      updateRetryCountdown();
+      fullResponse = fullResponse || '⚠️ Connection unavailable\n\n• We can’t reach your local AI service right now.\n• Your message will be queued and sent when connection restores\n• Retrying... (Next attempt in 5s)\n\nUse [Connect Now] from the status banner for immediate retry.';
+      fullResponse = fullResponse || '⚠️ Zayvora backend unavailable\n\n• Is your local Zayvora service running?\n• Your message will be queued and sent when connection restores\n• Retrying... (Next attempt in 5s)\n\nUse [Retry Now] from the status banner for immediate retry.';
+      fullResponse = fullResponse || `⚠️ Zayvora backend unavailable\n\n• Is Zayvora running? (${state.settings.endpoint})\n• Your message will be queued and sent when connection restores\n• Retrying... (Next attempt in 5s)\n\nUse [Retry Now] from the status banner for immediate retry.`;
     }
     streamBody.textContent = fullResponse;
   }
@@ -2026,6 +2315,7 @@ $('#link-privacy').addEventListener('click', () => showView('privacy'));
 $('#setting-endpoint').addEventListener('change', async (e) => {
   state.settings.endpoint = e.target.value.trim();
   await saveSettings();
+  await checkConnection();
 });
 
 $('#setting-model').addEventListener('change', async (e) => {
@@ -2048,6 +2338,34 @@ $('#btn-export').addEventListener('click', async () => {
   URL.revokeObjectURL(url);
 });
 
+const installBtn = $('#btn-install-pwa');
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (!state.deferredInstallPrompt) return;
+    const promptEvent = state.deferredInstallPrompt;
+    promptEvent.prompt();
+    const choice = await promptEvent.userChoice;
+    if (choice && choice.outcome !== 'accepted') {
+      updateInstallButton();
+      return;
+    }
+    state.deferredInstallPrompt = null;
+    updateInstallButton();
+  });
+}
+$('#btn-install-pwa').addEventListener('click', async () => {
+  if (!state.deferredInstallPrompt) return;
+  const promptEvent = state.deferredInstallPrompt;
+  promptEvent.prompt();
+  const choice = await promptEvent.userChoice;
+  if (choice && choice.outcome !== 'accepted') {
+    updateInstallButton();
+    return;
+  }
+  state.deferredInstallPrompt = null;
+  updateInstallButton();
+});
+
 $('#btn-delete-all').addEventListener('click', async () => {
   if (!confirm('This will permanently delete all conversations, preferences, and account data. Continue?')) return;
   await dbClear('conversations');
@@ -2056,6 +2374,25 @@ $('#btn-delete-all').addEventListener('click', async () => {
   await dbClear('tokens');
   sessionStorage.clear();
   location.reload();
+});
+
+const retryBtn = $('#btn-connection-retry');
+if (retryBtn) {
+  retryBtn.addEventListener('click', () => {
+    checkConnection();
+  });
+}
+
+$('#btn-manual-instructions').addEventListener('click', () => {
+  $('#connection-help-note').classList.toggle('hidden');
+  alert(
+    'Start Zayvora backend:\n\n' +
+    'python3 -m zayvora.server --host localhost --port 11434\n' +
+    'or\n' +
+    'python3 api/main.py --host localhost --port 11434\n\n' +
+    'Then verify:\n' +
+    'curl http://localhost:11434/health'
+  );
 });
 
 /* ─── Bottom Nav (Mobile) ─── */
@@ -2072,8 +2409,20 @@ $$('.bottom-nav-item').forEach(btn => {
   });
 });
 
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  state.deferredInstallPrompt = event;
+  updateInstallButton();
+});
+
+window.addEventListener('appinstalled', () => {
+  state.deferredInstallPrompt = null;
+  updateInstallButton();
+});
+
 /* ─── Init ─── */
 async function init() {
+  updateInstallButton();
   const hasSession = await checkExistingSession();
   if (hasSession) {
     await enterApp();

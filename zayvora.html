@@ -13,10 +13,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="./assets/css/base.css"/>
-  <link rel="stylesheet" href="./assets/css/layout.css"/>
-  <link rel="stylesheet" href="./assets/css/components.css"/>
-  <link rel="stylesheet" href="./assets/css/zayvora.css"/>
+  <link rel="stylesheet" href="/assets/css/base.css"/>
+  <link rel="stylesheet" href="/assets/css/layout.css"/>
+  <link rel="stylesheet" href="/assets/css/components.css"/>
+  <link rel="stylesheet" href="/assets/css/zayvora.css"/>
 </head>
 <body>
 
@@ -24,6 +24,7 @@
 <div class="noise" aria-hidden="true"></div>
 
 <!-- ═══════ NAV ═══════════════════════════════════════════ -->
+
 <nav class="site-nav" role="navigation" aria-label="Main navigation">
   <a href="/" class="nav-brand">
     <div class="nav-pulse" aria-hidden="true"></div>
@@ -35,47 +36,24 @@
     <a href="/zayvora" style="color:var(--accent);">Zayvora</a>
     <a href="https://github.com/via-decide" target="_blank" rel="noopener noreferrer">GitHub</a>
   </div>
+  <div class="zv-nav-pwa">
+    <div id="zv-connection-pill" class="zv-connection-pill connecting" role="status" aria-live="polite" title="Inference endpoint status">
+      <span class="zv-connection-dot" aria-hidden="true"></span>
+      <span id="zv-connection-text">Checking…</span>
+    </div>
+    <button id="zv-install-btn" class="zv-nav-btn" type="button" hidden>Install</button>
+  </div>
 </nav>
 
 <!-- ═══════ DASHBOARD ════════════════════════════════════ -->
 <div class="zv-page">
-    <!-- Sovereign Authorization Overlay -->
-    <div id="zv-auth-overlay" class="zv-auth-overlay">
-      <div class="zv-auth-modal">
-        <div class="zv-auth-icon">🛡️</div>
-        <h2 class="zv-auth-title">Sovereign Authorization Required</h2>
-        <p class="zv-auth-desc">You are attempting to access the Zayvora Orchestration Engine. Please provide your Sovereign Passport details to unlock the 3-panel dashboard.</p>
-        
-        <form id="zv-auth-form" class="zv-auth-form">
-          <div class="zv-auth-group">
-            <label for="zv-nfc-input">PHYSICAL NFC TAG ID</label>
-            <input type="text" id="zv-nfc-input" placeholder="Tap NFC or Paste Hardware ID..." required autofocus>
-          </div>
-          <div class="zv-auth-group">
-            <label for="zv-pin-input">SECURE PIN</label>
-            <input type="password" id="zv-pin-input" placeholder="••••••••" required>
-          </div>
-          <div class="zv-auth-group" style="border-top: 1px solid var(--bd); padding-top: 1rem; margin-top: 0.5rem;">
-            <label for="zv-gh-token" style="opacity: 0.6;">GITHUB TOKEN <span style="font-size: 0.6rem; opacity: 0.5;">(OPTIONAL — USE YOUR OWN REPOS)</span></label>
-            <input type="password" id="zv-gh-token" placeholder="ghp_xxxx... or leave blank for default">
-          </div>
-          <button type="submit" id="zv-login-btn" class="zv-auth-btn">Authorize Hardware</button>
-          <div id="zv-login-status" class="zv-auth-status"></div>
-        </form>
-
-        <div class="zv-auth-footer">
-          Don't have a passport? <a href="/research#sovereignty" target="_blank">Apply for access</a>
-        </div>
-      </div>
-    </div>
-
   <div class="zv-layout">
 
     <!-- ── Panel 1: Command Input ──────────────────────── -->
     <div class="zv-panel mobile-active" id="zv-panel-input">
       <div class="zv-panel-header">
-        <div class="zv-panel-title">Operations Command</div>
-        <button id="zv-logout-btn" class="zv-logout-link" title="Revoke Authorization">Logout Passport</button>
+        <div class="zv-panel-title">Command</div>
+        <div class="zv-panel-badge">Beast-Mode</div>
       </div>
 
       <div class="zv-input-area">
@@ -97,6 +75,9 @@
       </div>
 
       <div class="zv-panel-body">
+        <div class="zv-recent-header">Task Threads</div>
+        <div class="zv-recent-list" id="zv-thread-sidebar"></div>
+
         <div class="zv-recent-header">Recent Commands</div>
         <div class="zv-recent-list" id="zv-recent-list"></div>
 
@@ -124,6 +105,7 @@
       <div class="zv-panel-header">
         <div class="zv-panel-title">Execution</div>
         <div class="zv-panel-badge" id="zv-model-badge">Zayvora Multi-Agent</div>
+        <div class="zv-panel-badge" id="zv-model-badge">Zayvora Local Engine</div>
       </div>
 
       <!-- Stage Pipeline -->
@@ -131,6 +113,11 @@
 
       <!-- Progress -->
       <div class="zv-progress"><div class="zv-progress-bar"></div></div>
+
+      <div class="zv-timeline-panel">
+        <div class="zv-timeline-header">Live Execution</div>
+        <div class="zv-timeline-list" id="zv-live-timeline"></div>
+      </div>
 
       <!-- Log Feed -->
       <div class="zv-logs" id="zv-logs" role="log" aria-label="Execution logs" aria-live="polite"></div>
@@ -195,8 +182,13 @@
 </nav>
 
 <!-- ═══════ SCRIPTS ═══════════════════════════════════════ -->
-<script src="./assets/js/zayvora-auth.js"></script>
-<script src="./assets/js/zayvora-app.js"></script>
+<script src="/assets/js/zayvora-pwa.js"></script>
+<script src="./src/runtime/zayvoraRuntime.js"></script>
+<script src="/zayvora/thread-store.js"></script>
+<script src="/zayvora/thread-manager.js"></script>
+<script src="/zayvora/reasoning-engine.js"></script>
+<script src="/zayvora/live-timeline.js"></script>
+<script src="/assets/js/zayvora-app.js"></script>
 
 </body>
 </html>

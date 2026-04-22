@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="theme-color" content="#0b0c0f"/>
+  <meta name="theme-color" content="#0A1118"/>
+  <link rel="manifest" href="/manifest.json"/>
   <title>DAXINI — Sovereign AI Systems</title>
   <meta name="description" content="Daxini Systems Interface. Local-first reasoning engines, knowledge infrastructure, and sovereign AI architecture."/>
 
@@ -17,8 +18,16 @@
   <link rel="stylesheet" href="./assets/css/layout.css"/>
   <link rel="stylesheet" href="./assets/css/components.css"/>
   <link rel="stylesheet" href="./assets/css/modules.css"/>
+  <link rel="stylesheet" href="/assets/css/base.css"/>
+  <link rel="stylesheet" href="/assets/css/layout.css"/>
+  <link rel="stylesheet" href="/assets/css/components.css"/>
+  <link rel="stylesheet" href="/assets/css/modules.css"/>
+  <style>
+    .hidden { display: none !important; }
+  </style>
 </head>
 <body>
+<div id="mainAppContentWrapper">
 
 <!-- Noise texture -->
 <div class="noise" aria-hidden="true"></div>
@@ -30,6 +39,7 @@
     DAXINI
   </a>
   <div class="nav-links">
+    <a href="/workspace/">Workspace</a>
     <a href="#stack">Stack</a>
     <a href="#reasoning">Reasoning</a>
     <a href="#graph">Knowledge</a>
@@ -54,6 +64,18 @@
       <a href="/zayvora" class="btn">Launch Hybrid OS (PWA)</a>
       <a id="pwa-install-btn" class="btn hidden" style="border-color:var(--primary);color:var(--primary)">Install Runtime</a>
       <a href="https://github.com/via-decide" class="btn" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    <div class="hero-label">DAXINI WORKSPACE</div>
+    <h1>What do you want<br><span class="thin">to do today?</span></h1>
+    <p class="hero-tagline">Start with a usable action.</p>
+    <p class="hero-desc">Launch research, creation, analysis, and task execution directly in workspace. Architecture details are still available below.</p>
+    <div class="hero-buttons">
+      <a href="/workspace/?action=research" class="btn btn-primary">Research</a>
+      <a href="/workspace/?action=create" class="btn">Create</a>
+      <a href="/workspace/?action=analyze" class="btn">Analyze</a>
+      <a href="/workspace/?action=solve" class="btn">Solve</a>
+      <a href="/workspace/?action=documents" class="btn">Documents</a>
+      <a href="/zayvora" class="btn">Open Zayvora</a>
+      <a id="pwa-install-btn" class="btn hidden" style="border-color:var(--primary);color:var(--primary)">Install Daxini</a>
     </div>
     <div class="hero-meta">
       <div class="hero-stat">
@@ -131,15 +153,18 @@
 
 <!-- ═══════ FOOTER ════════════════════════════════════════ -->
 <footer class="site-footer">
-  <p>DAXINI SYSTEMS · <span id="footer-year">2026</span> · <a href="https://github.com/via-decide" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+  <p>DAXINI SYSTEMS · <span id="footer-year">2026</span> · Zayvora · LogicHub · ViaDecide · <a href="https://github.com/via-decide" target="_blank" rel="noopener noreferrer">GitHub</a></p>
 </footer>
+</div>
 
 <!-- ═══════ SCRIPTS ═══════════════════════════════════════ -->
-<script src="./assets/js/stack.js"></script>
-<script src="./assets/js/reasoning.js"></script>
-<script src="./assets/js/graph.js"></script>
-<script src="./assets/js/github.js"></script>
-<script src="./assets/js/app.js"></script>
+<script src="/assets/js/stack.js"></script>
+<script src="/assets/js/reasoning.js"></script>
+<script src="/assets/js/graph.js"></script>
+<script src="/assets/js/github.js"></script>
+<script src="/pwa.js"></script>
+<script src="/assets/js/app.js"></script>
+<script type="module" src="/assets/js/utils.js"></script>
 
 </body>
 </html>
