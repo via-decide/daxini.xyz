@@ -4,8 +4,8 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="theme-color" content="#0b0c0f"/>
-  <title>Zayvora — Sovereign Orchestration Dashboard</title>
-  <meta name="description" content="Zayvora Orchestration Dashboard. Real-time code synthesis, GitHub integration, and task management powered by the Antigravity Beast-Mode engine."/>
+  <title>Zayvora — Sovereign Multi-Agent OS</title>
+  <meta name="description" content="Zayvora Multi-Agent System. Real-time code synthesis, parallel agent reasoning, and task management powered by the Antigravity Beast-Mode engine."/>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -123,7 +123,7 @@
     <div class="zv-panel" id="zv-panel-exec">
       <div class="zv-panel-header">
         <div class="zv-panel-title">Execution</div>
-        <div class="zv-panel-badge" id="zv-model-badge">Gemini 3.1 Pro</div>
+        <div class="zv-panel-badge" id="zv-model-badge">Zayvora Multi-Agent</div>
       </div>
 
       <!-- Stage Pipeline -->
@@ -137,6 +137,16 @@
 
       <!-- Controls -->
       <div class="zv-controls">
+        <select id="zv-runtime-mode" aria-label="Runtime Mode" class="zv-ctrl-btn" style="appearance: auto;">
+          <option value="local">⚡ Local</option>
+          <option value="hybrid">🔁 Hybrid</option>
+          <option value="cloud">☁️ Cloud</option>
+        </select>
+        <select id="zv-perf-mode" aria-label="Performance Mode" class="zv-ctrl-btn" style="appearance: auto;">
+          <option value="full">Performance: Full</option>
+          <option value="balanced">Performance: Balanced</option>
+          <option value="lite">Performance: Lite</option>
+        </select>
         <button class="zv-ctrl-btn danger" id="zv-cancel" aria-label="Cancel execution">Cancel</button>
         <button class="zv-ctrl-btn" id="zv-clear" aria-label="Clear logs">Clear</button>
         <div class="zv-exec-status">Idle</div>
