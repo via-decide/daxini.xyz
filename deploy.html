@@ -142,17 +142,74 @@
   </div>
 
   <script>
-    function simulateDeploy() {
+    async function loadDeployments() {
+        try {
+            const res = await fetch('/api/deploy/list');
+            const data = await res.json();
+            
+            if (data.projects) {
+                const projectHtml = Object.entries(data.projects).map(([id, info]) => `
+                <div class="project-item">
+                  <div class="project-info">
+                    <h4>${id}</h4>
+                    <p>${info.path}</p>
+                  </div>
+                  <span style="font-size:0.8rem; color:var(--success);">Active</span>
+                </div>
+                `).join('');
+                if (projectHtml) document.querySelector('.project-list').innerHTML = projectHtml;
+            }
+
+            if (data.domains) {
+                const domainHtml = Object.entries(data.domains).map(([domain, info]) => `
+                <div class="domain-item">
+                  <div class="domain-tag">${info.active ? 'ACTIVE' : 'PENDING'}</div>
+                  ${domain} <span style="color:var(--text-muted);font-size:0.75rem;">(${info.project_id})</span>
+                </div>
+                `).join('');
+                if (domainHtml) document.querySelector('.domain-list').innerHTML = domainHtml;
+            }
+        } catch (e) {
+            console.error('Failed to load deployments', e);
+        }
+    }
+
+    async function simulateDeploy() {
       const log = document.getElementById('status-log');
       const time = new Date().toLocaleTimeString();
       log.innerHTML += `<br><span style="color:var(--accent);">[${time}] Initiating deployment pipeline...</span>`;
-      log.innerHTML += `<br>[${time}] Validating SPE constraints... OK`;
+      log.scrollTop = log.scrollHeight;
       
-      setTimeout(() => {
-        log.innerHTML += `<br>[${new Date().toLocaleTimeString()}] Push to Cloudflare Edge successful.`;
-        log.scrollTop = log.scrollHeight;
-      }, 1500);
+      const projectId = 'app-' + Math.random().toString(36).substr(2, 5);
+      const customDomain = prompt("Enter a custom domain for this deployment (e.g., myapp.local):");
+      
+      if (!customDomain) {
+          log.innerHTML += `<br><span style="color:#ef4444;">[${new Date().toLocaleTimeString()}] Deployment cancelled.</span>`;
+          return;
+      }
+
+      try {
+          const res = await fetch('/api/deploy/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ project_id: projectId, domain: customDomain })
+          });
+          const result = await res.json();
+          
+          if (result.success) {
+              log.innerHTML += `<br>[${new Date().toLocaleTimeString()}] Push to Local Edge successful. Target: ${result.targetDir}`;
+              loadDeployments(); // Reload UI
+          } else {
+              log.innerHTML += `<br><span style="color:#ef4444;">[${new Date().toLocaleTimeString()}] Deployment failed: ${result.error}</span>`;
+          }
+      } catch (err) {
+          log.innerHTML += `<br><span style="color:#ef4444;">[${new Date().toLocaleTimeString()}] Network error during deployment.</span>`;
+      }
+      log.scrollTop = log.scrollHeight;
     }
+
+    // Load on init
+    loadDeployments();
   </script>
 </body>
 </html>

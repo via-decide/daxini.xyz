@@ -47,7 +47,8 @@ async function loadSecurityKit() {
             { serveMirroredResponse, routeToHoneypot },
             { mutateHoneypotResponse },
             { suspicionTracker },
-            dbModule
+            dbModule,
+            deployEngine
         ] = await Promise.all([
             import('../security/browserFingerprint.js'),
             import('../security/botDetection.js'),
@@ -60,7 +61,8 @@ async function loadSecurityKit() {
             import('../security/mirrorRouter.js'),
             import('../security/honeypotMutator.js'),
             import('../security/suspicionScore.js'),
-            import('../security/initDB.js')
+            import('../security/initDB.js'),
+            import('../core/system/deploymentEngine.js')
         ]);
 
         const db = await (dbModule.getDB ? dbModule.getDB() : dbModule.default);
@@ -82,6 +84,7 @@ async function loadSecurityKit() {
             mutateHoneypotResponse,
             suspicionTracker,
             db,
+            deployEngine,
             active: true
         };
     } catch (err) {
@@ -476,6 +479,23 @@ export default async function handler(req, res) {
             summary: { total_events: 0, attacks_blocked: 0, by_region: {}, by_threat_type: {}, by_target_domain: {} },
             recent: []
         });
+    }
+
+    // ── Deployment Engine Endpoints ──
+    if (path === '/api/deploy/list') {
+        if (!kit.active || !kit.deployEngine) return res.status(503).json({ error: 'Deploy Engine offline.' });
+        return res.status(200).json(kit.deployEngine.getDeployments());
+    }
+
+    if (path === '/api/deploy/register') {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        if (!kit.active || !kit.deployEngine) return res.status(503).json({ error: 'Deploy Engine offline.' });
+        
+        const { project_id, domain } = req.body || {};
+        if (!project_id) return res.status(400).json({ error: 'project_id is required' });
+        
+        const result = kit.deployEngine.registerDeployment(project_id, domain);
+        return res.status(200).json(result);
     }
 
     if (path === '/api/check' || path === '/api') {

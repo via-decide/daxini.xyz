@@ -111,36 +111,57 @@ const server = createServer(async (req, res) => {
     return handler(req, res);
   }
 
-  // ── Static File Serving ─────────────────────────────────
-  if (REWRITES[pathname]) {
-    const target = path.join(__dirname, REWRITES[pathname]);
-    return serveFile(target, res);
+  // ── Dynamic Custom Domain Routing ───────────────────────
+  const host = req.headers.host ? req.headers.host.split(':')[0] : '';
+  
+  let baseDir = __dirname;
+  
+  // If request is NOT for primary domains, check deployment registry
+  if (host !== 'daxini.space' && host !== 'daxini.xyz' && host !== 'localhost' && host !== '127.0.0.1') {
+      import('./core/system/deploymentEngine.js').then((engine) => {
+          const targetPath = engine.resolveDomain(host);
+          if (targetPath) {
+              baseDir = targetPath;
+          }
+          continueRouting(baseDir);
+      }).catch(() => {
+          continueRouting(__dirname);
+      });
+  } else {
+      continueRouting(__dirname);
   }
 
-  let filePath = path.join(__dirname, pathname);
+  function continueRouting(rootDir) {
+      if (REWRITES[pathname]) {
+        const target = path.join(rootDir, REWRITES[pathname]);
+        return serveFile(target, res);
+      }
 
-  // Prevent path traversal attacks
-  if (!filePath.startsWith(__dirname)) {
-    logUnusualActivity({ ip, activity: 'path_traversal', details: pathname });
-    res.writeHead(403);
-    res.end();
-    return;
+      let filePath = path.join(rootDir, pathname);
+
+      // Prevent path traversal attacks
+      if (!filePath.startsWith(rootDir)) {
+        logUnusualActivity({ ip, activity: 'path_traversal', details: pathname });
+        res.writeHead(403);
+        res.end();
+        return;
+      }
+
+      if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
+        filePath = path.join(filePath, 'index.html');
+      }
+
+      if (!fs.existsSync(filePath) && !path.extname(filePath)) {
+        const withHtml = filePath + '.html';
+        if (fs.existsSync(withHtml)) filePath = withHtml;
+      }
+
+      if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        return serveFile(filePath, res);
+      }
+
+      serveFile(path.join(rootDir, 'index.html'), res);
   }
-
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
-    filePath = path.join(filePath, 'index.html');
-  }
-
-  if (!fs.existsSync(filePath) && !path.extname(filePath)) {
-    const withHtml = filePath + '.html';
-    if (fs.existsSync(withHtml)) filePath = withHtml;
-  }
-
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    return serveFile(filePath, res);
-  }
-
-  serveFile(path.join(__dirname, 'index.html'), res);
 });
 
 // ── WebSocket Security ────────────────────────────────────

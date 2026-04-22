@@ -21,3 +21,6 @@
 {"timestamp":"2026-04-22T17:12:37.029Z","os_load":13.2060546875,"memory_used_mb":58,"system_uptime":"208h","security":{"events_1h":0,"suspicion_pressure":0}}
 {"timestamp":"2026-04-22T17:16:52.527Z","os_load":9.39794921875,"memory_used_mb":58,"system_uptime":"208h","security":{"events_1h":0,"suspicion_pressure":0}}
 {"timestamp":"2026-04-22T17:19:43.637Z","os_load":9.1904296875,"memory_used_mb":58,"system_uptime":"208h","security":{"events_1h":0,"suspicion_pressure":0}}
+{"timestamp":"2026-04-22T17:38:34.394Z","os_load":10.56103515625,"memory_used_mb":58,"system_uptime":"209h","security":{"events_1h":0,"suspicion_pressure":0}}
+{"timestamp":"2026-04-22T18:19:29.321Z","os_load":6.1123046875,"memory_used_mb":58,"system_uptime":"209h","security":{"events_1h":0,"suspicion_pressure":0}}
+{"timestamp":"2026-04-22T18:19:53.901Z","os_load":7.52490234375,"memory_used_mb":58,"system_uptime":"209h","security":{"events_1h":0,"suspicion_pressure":0}}
