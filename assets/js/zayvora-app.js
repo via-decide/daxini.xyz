@@ -344,6 +344,22 @@
     addLog('INIT', 'Connecting to local zayvora:latest...', 'info');
 
     try {
+      const auth = JSON.parse(localStorage.getItem('zv_passport') || '{}');
+      const runtimeMode = document.getElementById('zv-runtime-mode')?.value || 'local';
+      const perfMode = document.getElementById('zv-perf-mode')?.value || 'full';
+      
+      const response = await fetch('/api/zayvora/execute', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${auth.uid || ''}`
+        },
+        body: JSON.stringify({ 
+          prompt: description,
+          github_token: auth.ghToken || null,
+          runtime_mode: runtimeMode,
+          performance_mode: perfMode
+        })
       await runReasoningStep(task.id, 1, 'Planning task', async () => {
         addLog('STEP 1', 'Planning task context...', 'info');
         updateProgress(15);
@@ -415,19 +431,30 @@
     const container = $('#zv-output');
     if (!container) return;
 
-    let pureCode = code;
-    const match = code.match(/```[a-z]*\\n([\\s\\S]*?)```/);
-    if (match) pureCode = match[1];
-
-    const highlighted = highlightPython(pureCode);
+    // Simple markdown parser to handle code blocks and multi-agent trace
+    const blocks = code.split(/```/);
+    let htmlOutput = '';
+    
+    for (let i = 0; i < blocks.length; i++) {
+        if (i % 2 === 0) {
+            // Text block
+            htmlOutput += '<div class="zv-agent-trace">' + escapeHtml(blocks[i]).replace(/\\n/g, '<br>') + '</div>';
+        } else {
+            // Code block
+            const match = blocks[i].match(/^([a-z]*)\\n([\\s\\S]*)$/);
+            const pureCode = match ? match[2] : blocks[i];
+            const highlighted = highlightPython(pureCode);
+            htmlOutput += '<div class="zv-code-block">' + highlighted + '</div>';
+        }
+    }
 
     container.innerHTML = `
       <div class="zv-output-section">
         <div class="zv-output-header">
-          <div class="zv-output-title">Sovereign Output (zayvora:latest)</div>
-          <button class="zv-copy-btn" id="zv-copy-code">Copy</button>
+          <div class="zv-output-title">Multi-Agent Synthesis Trace</div>
+          <button class="zv-copy-btn" id="zv-copy-code">Copy Full</button>
         </div>
-        <div class="zv-code-block" id="zv-code-content">\${highlighted}</div>
+        <div id="zv-code-content">\${htmlOutput}</div>
       </div>
       <div class="zv-pr-card">
         <div class="zv-pr-header">
@@ -444,9 +471,9 @@
     const copyBtn = $('#zv-copy-code');
     if (copyBtn) {
       copyBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(pureCode).then(() => {
+        navigator.clipboard.writeText(code).then(() => {
           copyBtn.textContent = 'Copied!';
-          setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+          setTimeout(() => { copyBtn.textContent = 'Copy Full'; }, 1500);
         });
       });
     }
