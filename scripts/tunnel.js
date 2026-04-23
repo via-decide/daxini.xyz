@@ -8,14 +8,24 @@ const ROOT = path.join(__dirname, '..');
 const ENGINE_PATH = path.join(ROOT, 'api/llm/sovereign_engine.js');
 const CLOUDFLARED_PATH = path.join(ROOT, 'cloudflared');
 
+// Skip in CI/Build environments
+if (process.env.CI || process.env.VERCEL || process.env.CF_PAGES) {
+  console.log('[AUTO-TUNNEL] CI environment detected. Skipping tunnel creation.');
+  process.exit(0);
+}
+
 async function startTunnel() {
+  if (!fs.existsSync(CLOUDFLARED_PATH)) {
+    console.warn(`[AUTO-TUNNEL] cloudflared binary not found at ${CLOUDFLARED_PATH}. Skipping.`);
+    return;
+  }
+
   console.log('[AUTO-TUNNEL] Starting Cloudflare tunnel...');
   
   const tunnel = spawn(CLOUDFLARED_PATH, ['tunnel', '--url', 'http://localhost:11434']);
   
   tunnel.stderr.on('data', (data) => {
     const output = data.toString();
-    // Look for the URL in the output
     const match = output.match(/https:\/\/.*\.trycloudflare\.com/);
     
     if (match) {
