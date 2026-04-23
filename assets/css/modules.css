@@ -469,6 +469,13 @@
 
 .site-footer a:hover { color: var(--accent2); }
 
+.site-footer .attribution {
+  margin-top: .75rem;
+  font-size: .68rem;
+  color: var(--tx3);
+  opacity: .75;
+}
+
 /* ═══════ RESPONSIVE ════════════════════════════════════ */
 @media (max-width: 840px) {
   .hero h1 { font-size: clamp(2.4rem, 10vw, 4rem); }

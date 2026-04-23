@@ -26,7 +26,7 @@
                     sessionStorage.removeItem('zv_passport');
                     showAuthOverlay();
                 }
-            } catch (e) {
+            } catch (_e) {
                 sessionStorage.removeItem('zv_passport');
                 showAuthOverlay();
             }
@@ -41,12 +41,12 @@
 
     function showAuthOverlay() {
         const overlay = $('#zv-auth-overlay');
-        if (overlay) overlay.classList.add('visible');
+        if (overlay) {overlay.classList.add('visible');}
     }
 
     function hideAuthOverlay() {
         const overlay = $('#zv-auth-overlay');
-        if (overlay) overlay.classList.remove('visible');
+        if (overlay) {overlay.classList.remove('visible');}
     }
 
     function unlockDashboard(auth) {
@@ -61,20 +61,24 @@
         const btn = $('#zv-login-btn');
         const status = $('#zv-login-status');
         
-        if (btn) btn.disabled = true;
+        if (btn) {btn.disabled = true;}
         if (status) {
             status.textContent = 'Verifying Hardware Integrity...';
             status.className = 'zv-auth-status info';
         }
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
             // Sovereign Architecture: Route auth logic to local gateway if hosted on static Cloudflare edge
             const isLive = window.location.hostname === 'daxini.xyz' || window.location.hostname === 'www.daxini.xyz' || window.location.hostname === 'daxini.space';
             const authEndpoint = isLive 
                 ? `http://127.0.0.1:3000/api/passport/verify?nfc_tag_id=${encodeURIComponent(nfcTagId)}&pin=${encodeURIComponent(pin)}`
                 : `/api/passport/verify?nfc_tag_id=${encodeURIComponent(nfcTagId)}&pin=${encodeURIComponent(pin)}`;
                 
-            const res = await fetch(authEndpoint);
+            const res = await fetch(authEndpoint, { signal: controller.signal });
+            clearTimeout(timeoutId);
             const data = await res.json();
 
             if (res.ok) {
@@ -103,11 +107,14 @@
                 throw new Error(data.error || 'Identity Rejected');
             }
         } catch (err) {
+            if (err.name === 'AbortError') {
+                err.message = 'Authorization Timeout. Backend node unreachable.';
+            }
             if (status) {
                 status.textContent = err.message;
                 status.className = 'zv-auth-status error';
             }
-            if (btn) btn.disabled = false;
+            if (btn) {btn.disabled = false;}
         }
     }
 
@@ -142,7 +149,17 @@
                 e.preventDefault();
                 const nfcId = $('#zv-nfc-input').value.trim();
                 const pin = $('#zv-pin-input').value.trim();
-                if (nfcId && pin) verifyPassport(nfcId, pin);
+                if (nfcId && pin) {verifyPassport(nfcId, pin);}
+            });
+
+            // FIX 2: Keyboard Auto-Scroll for Mobile
+            const inputs = form.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    setTimeout(() => {
+                        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 350); // Delay for keyboard expansion
+                });
             });
 
             // Show token status indicator after login
@@ -161,7 +178,7 @@
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
                 sessionStorage.removeItem('zv_passport');
-                if (expiryTimer) clearInterval(expiryTimer);
+                if (expiryTimer) {clearInterval(expiryTimer);}
                 updateSecurityIndicator('inactive');
                 location.reload();
             });
@@ -170,7 +187,7 @@
 
     // ── Security HUD ─────────────────────────────────────
     function injectSecurityHUD() {
-        if ($('#zv-security-hud')) return;
+        if ($('#zv-security-hud')) {return;}
         const hud = document.createElement('div');
         hud.id = 'zv-security-hud';
         hud.innerHTML = `<span id="zv-sec-dot"></span><span id="zv-sec-label">Session Inactive</span>`;
@@ -183,7 +200,7 @@
     function updateSecurityIndicator(state) {
         const dot = $('#zv-sec-dot');
         const label = $('#zv-sec-label');
-        if (!dot || !label) return;
+        if (!dot || !label) {return;}
         if (state === 'active') {
             dot.style.background = '#34d399';
             dot.style.boxShadow = '0 0 6px #34d399';
@@ -203,7 +220,7 @@
     }
 
     function startExpiryWatch(expiresAtUnix) {
-        if (expiryTimer) clearInterval(expiryTimer);
+        if (expiryTimer) {clearInterval(expiryTimer);}
         expiryTimer = setInterval(() => {
             const now = Math.floor(Date.now() / 1000);
             const remaining = expiresAtUnix - now;
