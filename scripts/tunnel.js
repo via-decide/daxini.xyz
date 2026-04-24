@@ -21,6 +21,7 @@ async function startTunnels() {
   }
 
   const ports = [
+    { port: 3000, name: 'GATEWAY', update: (url) => console.log(`[AUTO-TUNNEL] PROD UI ACCESS: ${url}`) },
     { port: 11434, name: 'OLLAMA', update: updateEngine },
     { port: 6000, name: 'BRAIN', update: updateBrainUrl }
   ];
