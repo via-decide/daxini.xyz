@@ -191,7 +191,15 @@ export default async function handler(req, res) {
     // SOP Classification Proxy (Brain Port 6000 or Tunneled)
     if (path === '/api/sop/classify' || path === '/api/sop/validate') {
         if (req.method !== 'POST') {return res.status(405).json({ error: 'Method not allowed' });}
-        const brainUrl = process.env.BRAIN_URL || 'http://localhost:6000';
+        
+        let brainUrl = process.env.BRAIN_URL || 'http://localhost:6000';
+        
+        // Try dynamic tunnel config fallback
+        try {
+            const { BRAIN_ENDPOINT } = await import('./brain_config.js').catch(() => ({}));
+            if (BRAIN_ENDPOINT) brainUrl = BRAIN_ENDPOINT;
+        } catch (_e) {}
+
         const targetPath = path.replace('/api/sop', '/sop');
         
         try {
