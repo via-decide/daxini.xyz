@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "start:sovereign": "AUTO_TUNNEL=true node server.js",
     "build": "node scripts/predeploy-validate.mjs",
     "smoke": "node scripts/smoke-test.mjs",
     "lint": "eslint . --max-warnings 200",
@@ -14,8 +15,7 @@
     "preview": "node server.js",
     "test": "npm run smoke",
     "tunnel": "node scripts/tunnel.js",
-    "public": "npm run build",
-    "vercel-build": "npm run build && npm run smoke"
+    "public": "npm run build"
   },
   "repository": {
     "type": "git",
