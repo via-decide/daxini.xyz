@@ -4,6 +4,8 @@
   const DB_NAME = 'daxini';
   const DB_VERSION = 1;
   const STORE_NAME = 'messages';
+  const VALID_ROLES = ['user', 'assistant'];
+  const VALID_STREAM_STATUSES = ['pending', 'streaming', 'complete', 'failed'];
 
   function initDB() {
     return new Promise((resolve, reject) => {
@@ -26,20 +28,29 @@
 
   function saveMessageLocal(message) {
     return initDB().then((db) => new Promise((resolve, reject) => {
+      if (!message || !message.userId) {
+        reject(new Error('saveMessageLocal requires message.userId'));
+        return;
+      }
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
       const now = Date.now();
 
+      const role = VALID_ROLES.includes(message.role) ? message.role : 'assistant';
+      const streamStatus = VALID_STREAM_STATUSES.includes(message.metadata && message.metadata.streamStatus)
+        ? message.metadata.streamStatus
+        : 'pending';
+
       const record = {
         id: message.id || (crypto.randomUUID ? crypto.randomUUID() : `msg_${now}_${Math.random().toString(36).slice(2)}`),
         userId: message.userId,
-        role: message.role,
-        content: message.content,
-        createdAt: message.createdAt || now,
+        role,
+        content: String(message.content || ''),
+        createdAt: Number(message.createdAt) || now,
         metadata: {
           tokensUsed: Number((message.metadata && message.metadata.tokensUsed) || 0),
           inferenceTimeMs: Number((message.metadata && message.metadata.inferenceTimeMs) || 0),
-          streamStatus: (message.metadata && message.metadata.streamStatus) || 'pending'
+          streamStatus
         }
       };
 
@@ -51,6 +62,10 @@
 
   function restoreChat(userId) {
     return initDB().then((db) => new Promise((resolve, reject) => {
+      if (!userId) {
+        resolve([]);
+        return;
+      }
       const tx = db.transaction(STORE_NAME, 'readonly');
       const store = tx.objectStore(STORE_NAME);
       const index = store.index('userId_createdAt');
