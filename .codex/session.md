@@ -18,6 +18,7 @@
 
 ## Bootstrap State
 - initialized: true
+- repo_initialized: true
 - bootstrap_complete: true
 - rules_resolved: true
 
