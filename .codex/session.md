@@ -1,13 +1,17 @@
-# SESSION STATE
+# Codex Session Bootstrap
 
-status: initialized
-repo: daxini.space
-mode: bootstrap
+- Repository: daxini.xyz
+- Mode: system
+- Purpose: initialize local Codex runtime context files.
 
-## CONTEXT
+## Default Workflow
+1. Read AGENTS.md + .codex/instructions.md
+2. Confirm scope and constraints
+3. Make minimal changes
+4. Run required checks
+5. Commit with clear message
 
-Bootstrap files created to enable task execution.
-
-## NEXT
-
-Proceed with system discovery tasks.
+## Guardrails
+- Browser-only/static-site assumptions
+- No new build/dependency tooling
+- Prefer minimal, reversible edits

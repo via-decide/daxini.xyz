@@ -1,25 +1,45 @@
-# CODEX INSTRUCTIONS
+# CODEX AGENT RULES — via-decide/decide.engine-tools
 
-## PURPOSE
-Define execution rules for this repository.
+## REPO IDENTITY
+- Stack: Vanilla JS, HTML, CSS, Supabase CDN.
+- No build step, npm, bundler, React, or Node runtime assumptions.
+- Runs directly in the browser (GitHub Pages/static hosting).
 
-## RULES
+## EXECUTION PROTOCOL (MANDATORY)
+READ → ANALYZE → PLAN → CONFIRM → MODIFY → VERIFY
 
-- Always analyze before implementing
-- Do not hallucinate APIs
-- Extend existing code, do not rewrite
-- Respect file limits per task
-- Maintain compatibility with existing system
+## PRIME DIRECTIVE
+- Read every file before modifying.
+- Use surgical, minimal edits only.
+- Do not rewrite unrelated code or architecture.
 
-## EXECUTION FLOW
+## PROTECTED FILES
+Do not modify these files unless explicitly instructed:
+- tools/games/skillhex-mission-control/js/app.js
+- tools/games/hex-wars/index.html (QUESTIONS array)
+- shared/shared.css
+- _redirects
+- tools-manifest.json (append-only)
+- missions.json (skillhex)
 
-1. Discover system
-2. Validate context
-3. Implement minimal changes
-4. Return structured output
+## SCRIPT / ENVIRONMENT RULES
+- Keep plain browser scripts; no imports/exports in shared/*.js.
+- Preserve critical script loading order in HTML heads.
+- No process.env / require / npm / bundlers.
 
-## FAIL CONDITIONS
+## SAFETY RULES
+- No duplicate const declarations.
+- No orphaned object literals.
+- Do not use !important on transform/opacity in game card contexts.
+- Preserve IIFE wrappers in router.js/shared scripts.
 
-- Missing context
-- Breaking existing features
-- Overwriting core logic
+## DEPLOYMENT RULE
+This repository deploys as a STATIC SITE.
+No build tools allowed.
+No npm allowed.
+No bundlers allowed.
+Every page must run directly in the browser.
+Breaking this rule breaks deployment.
+
+## OUTPUT / VERIFICATION EXPECTATIONS
+Before commit, run repository safety checks listed in project guidance and fix failures before finalizing.
