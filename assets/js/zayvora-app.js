@@ -45,6 +45,7 @@
   // ── Init ────────────────────────────────────────────────
   function init() {
     renderStages();
+    restoreRecentChatMessages();
     renderRecentCommands();
     renderTasks();
     bindEvents();
@@ -140,7 +141,8 @@
     textarea.value = '';
     updateCharCount();
 
-    // Run sovereign pipeline
+    // Save local user message then run sovereign pipeline
+    persistLocalMessage('user', text, { streamStatus: 'complete' });
     runPipeline(text);
   }
 
@@ -523,6 +525,7 @@
   }
 
   function finishTask(task, status) {
+    persistLocalMessage('assistant', status === 'success' ? `Task completed: ${task.description}` : `Task failed: ${task.description}`, { streamStatus: status === 'success' ? 'complete' : 'failed' });
     state.executionState = status === 'success' ? 'done' : 'idle';
     updateTask(task.id, { status, completedAt: new Date().toISOString(), lines: task.lines });
     updateExecStatus(status === 'success' ? 'Complete' : 'Failed');
@@ -604,6 +607,35 @@
   function updateExecStatus(text) {
     const el = $('.zv-exec-status');
     if (el) {el.textContent = text;}
+  }
+
+
+  function getCurrentUserId() {
+    const auth = JSON.parse(sessionStorage.getItem('zv_passport') || '{}');
+    return auth.uid || 'anonymous';
+  }
+
+  function persistLocalMessage(role, content, metadata = {}) {
+    if (typeof window.saveMessageLocal !== 'function') {return;}
+    window.saveMessageLocal({
+      userId: getCurrentUserId(),
+      role,
+      content,
+      metadata: {
+        tokensUsed: metadata.tokensUsed || 0,
+        inferenceTimeMs: metadata.inferenceTimeMs || 0,
+        streamStatus: metadata.streamStatus || 'pending'
+      }
+    }).catch(() => {});
+  }
+
+  function restoreRecentChatMessages() {
+    if (typeof window.restoreChat !== 'function') {return;}
+    window.restoreChat(getCurrentUserId()).then((messages) => {
+      const userMessages = messages.filter((m) => m.role === 'user');
+      state.recentCommands = userMessages.slice(-8).reverse().map((m) => m.content);
+      renderRecentCommands();
+    }).catch(() => {});
   }
 
   // ── Mobile Navigation ───────────────────────────────────
