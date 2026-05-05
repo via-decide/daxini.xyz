@@ -359,7 +359,14 @@ export function getBackupStatus() {
       latest: latestBackup,
       backup_dir: BACKUP_CONFIG.BACKUP_DIR,
     };
-  } catch (err) {
-    return { status: 'error', error: err.message };
   }
 }
+
+// ── Export Aliases (Compatibility) ────────────────────────
+export const _generateRecoveryKey = generateRecoveryKey;
+export const _hashRecoveryKey = hashRecoveryKey;
+export const _verifyRecoveryKey = verifyRecoveryKey;
+export const _backupPassport = backupPassport;
+export const _restorePassport = restorePassport;
+export const _createFullBackup = createFullBackup;
+export const _getBackupStatus = getBackupStatus;

@@ -68,3 +68,10 @@ export function rotateLogs() {
 
 setInterval(rotateLogs, 6 * 60 * 60 * 1000);
 rotateLogs();
+// ── Export Aliases (Compatibility) ────────────────────────
+export const _logLoginAttempt = logLoginAttempt;
+export const _logRateLimitHit = logRateLimitHit;
+export const _logPromptInjection = logPromptInjection;
+export const _logRuntimeKill = logRuntimeKill;
+export const _logUnusualActivity = logUnusualActivity;
+export const _logSessionEvent = logSessionEvent;
