@@ -49,7 +49,7 @@ async function startTunnels() {
 
 function updateEngine(url) {
   try {
-    let content = fs.readFileSync(ENGINE_PATH, 'utf8');
+    const content = fs.readFileSync(ENGINE_PATH, 'utf8');
     const endpoint = `${url}/api/generate`;
     const updated = content.replace(/const OLLAMA_ENDPOINT = '.*';/, `const OLLAMA_ENDPOINT = '${endpoint}';`);
     if (content !== updated) {

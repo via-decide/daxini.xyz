@@ -322,7 +322,7 @@
         const sopObj = {};
         block.split('\n').forEach(line => {
           const [k, ...v] = line.split(':');
-          if (k && v.length) sopObj[k.trim()] = v.join(':').trim();
+          if (k && v.length) {sopObj[k.trim()] = v.join(':').trim();}
         });
 
         const valRes = await fetch('/api/sop/validate', {
@@ -347,7 +347,7 @@
         updateExecStatus('SOP Refusal');
         return;
       }
-    } catch (sopErr) {
+    } catch {
       addLog('WARN', 'SOP classification skipped: Brain offline.', 'warn');
     }
 

@@ -14,7 +14,7 @@ const DB_PATH = path.join(DB_DIR, 'daxini.db');
 
 let _db = null;
 
-function getDb() {
+export function getDb() {
   if (!_db) {
     if (!fs.existsSync(DB_DIR)) {fs.mkdirSync(DB_DIR, { recursive: true });}
     _db = new Database(DB_PATH);
@@ -54,5 +54,20 @@ export function ensureDatabase() {
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      order_id TEXT NOT NULL,
+      payment_id TEXT UNIQUE,
+      amount INTEGER NOT NULL,
+      currency TEXT NOT NULL,
+      status TEXT CHECK(status IN ('pending', 'success', 'failed')) DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      verified_at DATETIME
+    );
+    CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
+    CREATE INDEX IF NOT EXISTS idx_payments_order ON payments(order_id);
   `);
 }

@@ -118,7 +118,6 @@ export async function generateCodeStream(prompt, onChunk, onError, onComplete, g
     const decoder = new TextDecoder('utf-8');
     
     let isDone = false;
-    let buffer = '';
     let isInsideJSON = false;
     let jsonBuffer = '';
 
@@ -136,7 +135,7 @@ export async function generateCodeStream(prompt, onChunk, onError, onComplete, g
         try {
           const parsed = JSON.parse(line);
           if (parsed.response) {
-            let text = parsed.response;
+            const text = parsed.response;
             
             for (let i = 0; i < text.length; i++) {
               const char = text[i];
@@ -160,7 +159,7 @@ export async function generateCodeStream(prompt, onChunk, onError, onComplete, g
                     isInsideJSON = false;
                     jsonBuffer = '';
                     continue; // Skip the closing '}'
-                  } catch (e) {
+                  } catch {
                     // Not a complete JSON yet
                   }
                 }

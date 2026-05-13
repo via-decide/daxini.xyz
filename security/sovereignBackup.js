@@ -359,6 +359,8 @@ export function getBackupStatus() {
       latest: latestBackup,
       backup_dir: BACKUP_CONFIG.BACKUP_DIR,
     };
+  } catch (err) {
+    return { status: 'error', message: err.message };
   }
 }
 
