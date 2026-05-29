@@ -90,12 +90,12 @@ export async function generateCodeStream(prompt, onChunk, onError, onComplete, g
   if (model === 'zayvora:latest') {
     try {
       const mlxEndpoint = 'http://127.0.0.1:8899/generate';
-      const formattedPrompt = \`<|im_start|>system\\n\${systemMsg}<|im_end|>\\n<|im_start|>user\\n\${prompt}<|im_end|>\\n<|im_start|>assistant\\n\`;
+      const formattedPrompt = `<|im_start|>system\n${systemMsg}<|im_end|>\n<|im_start|>user\n${prompt}<|im_end|>\n<|im_start|>assistant\n`;
       const reqBody = { prompt: formattedPrompt, max_tokens: 4096, temperature: 0.1, top_p: 0.9 };
       const res = await fetch(mlxEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) });
       if (!res.ok) {
         const text = await res.text();
-        return onError(new Error(\`Zayvora Brain MLX Error: \${res.status} - \${text}\`));
+        return onError(new Error(`Zayvora Brain MLX Error: ${res.status} - ${text}`));
       }
       const data = await res.json();
       const text = data.response || '';
