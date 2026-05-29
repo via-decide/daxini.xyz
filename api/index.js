@@ -6,7 +6,7 @@
 
 import crypto from 'crypto';
 import { generateCodeStream } from './llm/sovereign_engine.js';
-import { issueSessionToken } from '../security/sessionToken.js';
+import { issueSessionToken, verifySessionToken } from '../security/sessionToken.js';
 import { guardPrompt, getBlockedResponse } from '../security/promptGuard.js';
 import { requestExecution, completeExecution } from '../security/runtimeGuard.js';
 import { checkAttemptStatus, recordFailedAttempt, recordSuccessfulAttempt } from '../security/patternAuth.js';
@@ -194,7 +194,7 @@ export default async function handler(req, res) {
     if (path === '/api/sop/classify' || path === '/api/sop/validate') {
         if (req.method !== 'POST') {return res.status(405).json({ error: 'Method not allowed' });}
         
-        let brainUrl = process.env.BRAIN_URL || 'http://localhost:6000';
+        let brainUrl = process.env.BRAIN_URL || 'http://127.0.0.1:6000';
         
         // Try dynamic tunnel config fallback
         try {
@@ -216,6 +216,32 @@ export default async function handler(req, res) {
         } catch (err) {
             console.error(`[GATEWAY] Brain Proxy Failed: ${err.message}`);
             return res.status(503).json({ error: 'Zayvora Brain Offline', details: err.message, target: brainUrl });
+        }
+    }
+    
+    // ── Zayvora Bridge (Proxy to Internal API on 8081) ──
+    if (path.startsWith('/zayvora/api/zayvora/') || path === '/api/zayvora/plan' || path === '/api/zayvora/synthesize' || path === '/api/zayvora/verify') {
+        if (req.method !== 'POST') {return res.status(405).json({ error: 'Method not allowed' });}
+        
+        // Strip the extra /zayvora/api/ if it exists, so it maps to /api/zayvora/...
+        let targetPath = path;
+        if (path.startsWith('/zayvora/api/zayvora/')) {
+            targetPath = path.replace('/zayvora/api/', '/api/');
+        }
+        
+        try {
+            const zayvoraUrl = process.env.ZAYVORA_URL || 'http://127.0.0.1:8081';
+            console.log(`[GATEWAY] Proxying Zayvora Bridge request to: ${zayvoraUrl}${targetPath}`);
+            const zayvoraRes = await fetch(`${zayvoraUrl}${targetPath}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }, // omitting auth for plan/synth/verify right now, can add later if needed
+                body: JSON.stringify(req.body)
+            });
+            const data = await zayvoraRes.json();
+            return res.status(zayvoraRes.status).json(data);
+        } catch (err) {
+            console.error(`[GATEWAY] Zayvora Bridge Failed: ${err.message}`);
+            return res.status(503).json({ error: 'Zayvora API Backend Offline', details: err.message });
         }
     }
     
@@ -328,11 +354,22 @@ export default async function handler(req, res) {
         
         // Authorization Required for Zayvora Orchestration
         const auth = req.headers['authorization'];
-        if (!auth || !auth.startsWith('Bearer UID-')) {
+        if (!auth || !auth.startsWith('Bearer ')) {
             return res.status(401).json({ error: 'Sovereign Passport Required' });
         }
 
-        const identity = auth.replace('Bearer ', '');
+        let identity = null;
+        try {
+            const token = auth.replace('Bearer ', '');
+            if (token.startsWith('UID-')) {
+                identity = token;
+            } else {
+                const decoded = verifySessionToken(token);
+                identity = decoded.sub;
+            }
+        } catch (e) {
+            return res.status(401).json({ error: `Sovereign Passport Invalid: ${e.message}` });
+        }
         const prompt = req.body ? req.body.prompt : null;
         const githubToken = req.body ? req.body.github_token : null;
         const performanceMode = req.body ? req.body.performance_mode || 'full' : 'full';
@@ -481,8 +518,14 @@ export default async function handler(req, res) {
     // ── Backup Status (admin only — requires sovereign token) ──
     if (path === '/api/backup/status') {
         const auth = req.headers['authorization'];
-        if (!auth || !auth.startsWith('Bearer UID-')) {
+        if (!auth || !auth.startsWith('Bearer ')) {
             return res.status(401).json({ error: 'Sovereign Passport Required' });
+        }
+        try {
+            const token = auth.replace('Bearer ', '');
+            if (!token.startsWith('UID-')) verifySessionToken(token);
+        } catch (e) {
+            return res.status(401).json({ error: 'Invalid Passport' });
         }
         return res.status(200).json(getBackupStatus());
     }
@@ -491,8 +534,14 @@ export default async function handler(req, res) {
     if (path === '/api/backup/create') {
         if (req.method !== 'POST') {return res.status(405).json({ error: 'Method not allowed' });}
         const auth = req.headers['authorization'];
-        if (!auth || !auth.startsWith('Bearer UID-')) {
+        if (!auth || !auth.startsWith('Bearer ')) {
             return res.status(401).json({ error: 'Sovereign Passport Required' });
+        }
+        try {
+            const token = auth.replace('Bearer ', '');
+            if (!token.startsWith('UID-')) verifySessionToken(token);
+        } catch (e) {
+            return res.status(401).json({ error: 'Invalid Passport' });
         }
         if (kit.active && kit.db) {
             const success = createFullBackup(kit.db);
@@ -546,6 +595,11 @@ export default async function handler(req, res) {
         if (req.method !== 'POST') {return res.status(405).json({ error: 'Method not allowed' });}
         return handleWebhook(req, res);
     }
+    
+    if (path === '/api/payments/key') {
+        if (req.method !== 'GET') {return res.status(405).json({ error: 'Method not allowed' });}
+        return res.status(200).json({ key: process.env.RAZORPAY_KEY_ID });
+    }
 
     if (path === '/api/check' || path === '/api') {
 
@@ -561,5 +615,4 @@ export default async function handler(req, res) {
         message: globalError.message 
     });
   }
->>>>>>> 2d43c5d (fix: resolve Zayvora Brain Offline regression, fix security syntax error, and finalize hardening v1.2 audit)
 }
