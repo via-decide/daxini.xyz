@@ -21,6 +21,7 @@ import { generateClientFingerprint as _generateClientFingerprint } from './secur
 import { logRateLimitHit, logUnusualActivity } from './security/securityLogger.js';
 import { suspicionTracker } from './security/suspicionScore.js';
 import { runSystemPruning } from './core/system/index.js';
+import { routeFilter } from './security/bloomFilter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
@@ -57,6 +58,18 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = url.pathname.replace(/\/$/, '') || '/';
   const ip = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '0.0.0.0';
+
+  // ── Layer 0: Bloom Filter (Cache Miss Attack Prevention) ──
+  // Only check static assets and core pages, exclude API/Passport for now
+  if (!pathname.startsWith('/api') && !pathname.startsWith('/passport') && !path.extname(pathname)) {
+    if (!routeFilter.has(pathname)) {
+      suspicionTracker.increment(ip, 10, 'CACHE_MISS_ATTACK_DETECTION');
+      logUnusualActivity({ ip, activity: 'bloom_filter_reject', details: `Invalid route: ${pathname}` });
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Not Found', code: 'ZVR-404-BLOOM' }));
+      return;
+    }
+  }
 
   // ── Layer 1: Edge Rate Limiting ─────────────────────────
   if (!edgeLimiter.check(ip)) {

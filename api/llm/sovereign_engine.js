@@ -8,7 +8,7 @@
  * ZERO EXTERNAL API DEPENDENCIES.
  */
 
-const OLLAMA_ENDPOINT = 'https://filled-nec-cats-happens.trycloudflare.com/api/generate';
+const OLLAMA_ENDPOINT = 'http://127.0.0.1:11434/api/generate';
 const MODEL = 'zayvora:latest';
 export const ENGINE_NAME = 'Zayvora Local Engine';
 export const ENGINE_PROVIDER = 'zayvora-local';
@@ -87,6 +87,26 @@ export async function generateCodeStream(prompt, onChunk, onError, onComplete, g
   // Optimize context size based on device constraint mode
   const ctxSize = performanceMode === 'lite' ? 4096 : (performanceMode === 'balanced' ? 8192 : 16384);
 
+  if (model === 'zayvora:latest') {
+    try {
+      const mlxEndpoint = 'http://127.0.0.1:8899/generate';
+      const formattedPrompt = `<|im_start|>system\n${systemMsg}<|im_end|>\n<|im_start|>user\n${prompt}<|im_end|>\n<|im_start|>assistant\n`;
+      const reqBody = { prompt: formattedPrompt, max_tokens: 4096, temperature: 0.1, top_p: 0.9 };
+      const res = await fetch(mlxEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) });
+      if (!res.ok) {
+        const text = await res.text();
+        return onError(new Error(`Zayvora Brain MLX Error: ${res.status} - ${text}`));
+      }
+      const data = await res.json();
+      const text = data.response || '';
+      for (const char of text) { onChunk(char); }
+      onComplete();
+      return;
+    } catch (e) {
+      return onError(e);
+    }
+  }
+
   const reqBody = {
     model: model,
     prompt: prompt,
@@ -118,7 +138,6 @@ export async function generateCodeStream(prompt, onChunk, onError, onComplete, g
     const decoder = new TextDecoder('utf-8');
     
     let isDone = false;
-    let buffer = '';
     let isInsideJSON = false;
     let jsonBuffer = '';
 
@@ -136,7 +155,7 @@ export async function generateCodeStream(prompt, onChunk, onError, onComplete, g
         try {
           const parsed = JSON.parse(line);
           if (parsed.response) {
-            let text = parsed.response;
+            const text = parsed.response;
             
             for (let i = 0; i < text.length; i++) {
               const char = text[i];
@@ -160,7 +179,7 @@ export async function generateCodeStream(prompt, onChunk, onError, onComplete, g
                     isInsideJSON = false;
                     jsonBuffer = '';
                     continue; // Skip the closing '}'
-                  } catch (e) {
+                  } catch {
                     // Not a complete JSON yet
                   }
                 }

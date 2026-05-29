@@ -4,7 +4,7 @@
  */
 
 import crypto from 'crypto';
-import { hostname } from 'os';
+import os from 'os';
 
 const DEFAULT_TTL_SECONDS = parseInt(process.env.WORKSPACE_SESSION_TTL || '1200', 10); // 20 minutes
 
@@ -18,7 +18,7 @@ function getSessionSecret() {
     throw new Error('[FATAL] SECURITY_SECRET env var is required in production. Cannot use fallback.');
   }
   console.warn('[SECURITY] WARNING: Using dev-only fallback secret. Set SECURITY_SECRET in .env for production.');
-  return 'dev-only-fallback-' + hostname();
+  return 'dev-only-fallback-' + os.hostname();
 }
 
 function toBase64Url(value) {

@@ -22,7 +22,7 @@
   window.AntigravityMonitor = {
     logMessageSuccess: (latency) => {
       metrics.streakOfSuccessfulMessages++;
-      if (metrics.firstMessageLatency === null) metrics.firstMessageLatency = latency;
+      if (metrics.firstMessageLatency === null) {metrics.firstMessageLatency = latency;}
       metrics.averageMessageLatency = 
         metrics.averageMessageLatency === 0 ? latency : (metrics.averageMessageLatency + latency) / 2;
       console.log(`[MONITOR] Message Success: ${latency.toFixed(2)}ms`);
@@ -65,10 +65,13 @@
       const res = await fetch('http://localhost:8000/health', { timeout: 2000 });
       metrics.zayvoraStatus = res.ok ? 'ready' : 'error';
       metrics.lastHealthCheck = performance.now() - start;
-    } catch (e) {
+    } catch {
       metrics.zayvoraStatus = 'unreachable';
     }
   }
+
+  // Boot health check
+  checkHealth();
 
   // 2. Event Listeners
   window.addEventListener('online', () => window.AntigravityMonitor.logMessageSuccess(0)); // Reset latency baseline

@@ -18,12 +18,13 @@
  */
 export function getSecurityHeaders(options = {}) {
   const {
-    allowedScriptSources = ["'self'", 'https://cdn.jsdelivr.net'],
-    allowedConnectSources = ["'self'"],
-    allowedImageSources = ["'self'", 'data:', 'https://fonts.gstatic.com'],
+    allowedScriptSources = ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://checkout.razorpay.com'],
+    allowedConnectSources = ["'self'", 'https://api.github.com', 'https://api.razorpay.com', 'https://lumberjack.razorpay.com'],
+    allowedImageSources = ["'self'", 'data:', 'https://fonts.gstatic.com', 'https://checkout.razorpay.com'],
     allowedFontSources = ["'self'", 'https://fonts.googleapis.com', 'https://fonts.gstatic.com'],
     allowedStyleSources = ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
     frameAncestors = ["'none'"],
+    frameSources = ["'self'", 'https://checkout.razorpay.com'],
     reportUri = null,
   } = options;
 
@@ -34,6 +35,7 @@ export function getSecurityHeaders(options = {}) {
     `connect-src ${allowedConnectSources.join(' ')}`,
     `img-src ${allowedImageSources.join(' ')}`,
     `font-src ${allowedFontSources.join(' ')}`,
+    `frame-src ${frameSources.join(' ')}`,
     `frame-ancestors ${frameAncestors.join(' ')}`,
     `base-uri 'self'`,
     `form-action 'self'`,
