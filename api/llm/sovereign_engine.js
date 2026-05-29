@@ -9,7 +9,7 @@
  */
 
 const OLLAMA_ENDPOINT = 'http://127.0.0.1:11434/api/generate';
-const MODEL = 'llama3:latest';
+const MODEL = 'zayvora:latest';
 export const ENGINE_NAME = 'Zayvora Local Engine';
 export const ENGINE_PROVIDER = 'zayvora-local';
 export const ENGINE_MODEL = MODEL;
@@ -55,7 +55,7 @@ CRITICAL DIRECTIVES:
 FINAL LINE:
 Always end your response with exactly: "👉 Next Expansion Idea: (one step that evolves system further)"`;
 
-export async function generateCodeStream(prompt, onChunk, onError, onComplete, githubToken = null, performanceMode = 'full', runtimeMode = 'local', model = 'llama3:latest') {
+export async function generateCodeStream(prompt, onChunk, onError, onComplete, githubToken = null, performanceMode = 'full', runtimeMode = 'local', model = 'zayvora:latest') {
   let systemMsg = SYSTEM_PROMPT;
   
   // ── Dynamic Code Standard Injection ──
@@ -86,6 +86,26 @@ export async function generateCodeStream(prompt, onChunk, onError, onComplete, g
 
   // Optimize context size based on device constraint mode
   const ctxSize = performanceMode === 'lite' ? 4096 : (performanceMode === 'balanced' ? 8192 : 16384);
+
+  if (model === 'zayvora:latest') {
+    try {
+      const mlxEndpoint = 'http://127.0.0.1:8899/generate';
+      const formattedPrompt = \`<|im_start|>system\\n\${systemMsg}<|im_end|>\\n<|im_start|>user\\n\${prompt}<|im_end|>\\n<|im_start|>assistant\\n\`;
+      const reqBody = { prompt: formattedPrompt, max_tokens: 4096, temperature: 0.1, top_p: 0.9 };
+      const res = await fetch(mlxEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) });
+      if (!res.ok) {
+        const text = await res.text();
+        return onError(new Error(\`Zayvora Brain MLX Error: \${res.status} - \${text}\`));
+      }
+      const data = await res.json();
+      const text = data.response || '';
+      for (const char of text) { onChunk(char); }
+      onComplete();
+      return;
+    } catch (e) {
+      return onError(e);
+    }
+  }
 
   const reqBody = {
     model: model,
