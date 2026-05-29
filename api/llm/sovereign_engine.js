@@ -9,7 +9,7 @@
  */
 
 const OLLAMA_ENDPOINT = 'http://127.0.0.1:11434/api/generate';
-const MODEL = 'zayvora:latest';
+const MODEL = 'llama3:latest';
 export const ENGINE_NAME = 'Zayvora Local Engine';
 export const ENGINE_PROVIDER = 'zayvora-local';
 export const ENGINE_MODEL = MODEL;
@@ -55,7 +55,7 @@ CRITICAL DIRECTIVES:
 FINAL LINE:
 Always end your response with exactly: "👉 Next Expansion Idea: (one step that evolves system further)"`;
 
-export async function generateCodeStream(prompt, onChunk, onError, onComplete, githubToken = null, performanceMode = 'full', runtimeMode = 'local', model = 'zayvora:latest') {
+export async function generateCodeStream(prompt, onChunk, onError, onComplete, githubToken = null, performanceMode = 'full', runtimeMode = 'local', model = 'llama3:latest') {
   let systemMsg = SYSTEM_PROMPT;
   
   // ── Dynamic Code Standard Injection ──
